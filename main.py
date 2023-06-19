@@ -1,21 +1,16 @@
-import numpy as np
-import cv2 as cv
+import cv2
+import matplotlib.pyplot as plt
 
-cap = cv.VideoCapture(0)
-if not cap.isOpened():
-    print("Cannot open camera")
-    exit()
-while True:
-    ret, frame = cap.read()
+img_gray = cv2.imread("food.jpg", cv2.IMREAD_GRAYSCALE)
 
-    if not ret:
-        print("Can't recieve stream")
-        break
+img_canny = cv2.Canny(img_gray, threshold1=150, threshold2=250)
 
-    gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-    cv.imshow('frame', gray)
-    if cv.waitKey(1) == ord('q'):
-        break
+plt.figure(1)
+plt.subplot(121)
+plt.imshow(img_gray, cmap="gray")
+plt.title("Image Gray")
 
-cap.release()
-cv.destroyAllWindows()
+plt.subplot(122)
+plt.imshow(img_canny, cmap="gray")
+plt.title("Canny Image")
+plt.show()
