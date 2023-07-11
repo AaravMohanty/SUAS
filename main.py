@@ -1,7 +1,7 @@
 import cv2
 import matplotlib.pyplot as plt
 
-img_gray = cv2.imread("food.jpg", cv2.IMREAD_GRAYSCALE)
+img_gray = cv2.imread("raymom.jpg", cv2.IMREAD_GRAYSCALE)
 
 img_canny = cv2.Canny(img_gray, threshold1=150, threshold2=250)
 

@@ -3,8 +3,7 @@
 
 #NOTES 
 #should probably migrate to using subprocess library at some point, seems more robust than os
-#The keep alive loop causes the gopro to get REALLY hot, so should look into cooling solutions
-#find better way to do keep alive, as it seems super inefficient right now
+#
 
 #MUST RUN THIS WITH THIS COMMAND
 #sudo -E python Connect_to_Gopro.py
@@ -35,15 +34,6 @@ while connected == 2560: #2560 is the error code that is returned when nmcli can
 	os.system("sudo nmcli dev wifi rescan")
 	connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F")
 	#this loop usually takes around 2-4 tries to find it, so dont freak out if it cant find it immediately
-
-
-#keep-alive loop. prevents the gopro from falling asleep 
-
-while(True):
-
-	requests.get(url = "http://10.5.5.9:8080/gopro/camera/keep_alive" )
-	time.sleep(3)
-	print("sent keep-alive")
 
 
 """
