@@ -6,7 +6,8 @@ image_path = "recent.jpg"
 image = Image.open(image_path)
 
 #using selectROI() function to draw the bounding box around the required objects
-imagedraw = cv.selectROI(image)
+img = cv.imread("recent.jpg")
+imagedraw = cv.selectROI(img)
 #cropping the area of the image within the bounding box using imCrop() function
 croppedimage = image[int(imagedraw[1]):int(imagedraw[1]+imagedraw[3]), int(imagedraw[0]):int(imagedraw[0]+imagedraw[2])]
 
