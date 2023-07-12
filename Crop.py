@@ -5,11 +5,20 @@ import cv2 as cv
 image_path = "recent.jpg"
 image = Image.open(image_path)
 
-#using selectROI() function to draw the bounding box around the required objects
-img = cv.imread("recent.jpg")
-imagedraw = cv.selectROI(img)
-#cropping the area of the image within the bounding box using imCrop() function
-croppedimage = image[int(imagedraw[1]):int(imagedraw[1]+imagedraw[3]), int(imagedraw[0]):int(imagedraw[0]+imagedraw[2])]
+# Display the image using OpenCV
+cv_image = cv.cvtColor(cv.imread(image_path), cv.COLOR_BGR2RGB)
+cv.namedWindow("Image")
+cv.imshow("Image", cv_image)
+cv.waitKey(0)
+cv.destroyAllWindows()
+
+# Ask the user to draw a bounding box interactively
+print("Draw a rectangle to specify the region of interest.")
+print("Press 'Enter' to confirm the selection.")
+imagedraw = cv.selectROI(cv_image, False)
+
+# Crop the image
+cropped_image = image.crop((imagedraw[0], imagedraw[1], imagedraw[0]+imagedraw[2], imagedraw[1]+imagedraw[3]))
 
 # Save the cropped image
-croppedimage.save("cropped.jpg")
+cropped_image.save("cropped.jpg")
