@@ -1,41 +1,36 @@
-import cv2
 import numpy as np
 from sklearn.cluster import KMeans
+from PIL import Image
 
-
-def kmeans_color_segmentation(image_path, num_clusters=2, tolerance=120):
-    # Load the image
-    image = cv2.imread("recent.jpg")
-
+def kmeans_color_segmentation(image_path, num_clusters=2, tolerance=30):
+    image = Image.open('recent.jpg')
+    image = image.convert("RGB")
+    
     # Reshape the image to a 2D array of pixels
-    pixels = image.reshape(-1, 3)
-
+    pixels = np.array(image).reshape(-1, 3)
+    
     # Apply k-means clustering
     kmeans = KMeans(n_clusters=num_clusters)
     kmeans.fit(pixels)
-
+    
     # Get the labels and cluster centers
     labels = kmeans.labels_
     centers = kmeans.cluster_centers_
-
-    # Determine the color of interest (cluster center with the highest count)
-    cluster_avg_intensities = np.mean(centers, axis=1)
-    color_of_interest = centers[np.argmax(cluster_avg_intensities)]
-
+    
+    # Determine the color of interest (cluster with the largest number of pixels)
+    unique_labels, counts = np.unique(labels, return_counts=True)
+    color_of_interest = centers[np.argmax(counts)]
+    
     # Create a mask based on the color of interest and tolerance
-    mask = np.linalg.norm(image - color_of_interest, axis=2) <= tolerance
-
+    mask = np.linalg.norm(np.array(image) - color_of_interest, axis=2) <= tolerance
+    
     # Apply the mask to the original image
-    result = np.where(mask[:, :, np.newaxis], image, 0)
+    segmented_image = Image.fromarray(np.where(mask[:, :, np.newaxis], np.array(image), 0).astype(np.uint8))
+    
+    return segmented_image
 
-    return result
-
-
-# Test the code
 image_path = 'recent.jpg'
-segmented_image = kmeans_color_segmentation(image_path, num_clusters=2, tolerance=120)
+segmented_image = kmeans_color_segmentation(image_path, num_clusters=2, tolerance=30)
 
-# Display the segmented image
-cv2.imshow('Segmented Image', segmented_image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+# Display
+segmented_image.show()
