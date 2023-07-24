@@ -13,6 +13,9 @@
 from open_gopro import WirelessGoPro
 import open_gopro,os,time,requests
 
+iface = input("enter wifi interface to use to connect to the gopro. if left empty, will default to wlan0")
+if iface=="":
+	iface = "wlan0"
 
 gopro = WirelessGoPro(enable_wifi=False)
 print("opening GoPro Bluetooth connection..")
@@ -28,12 +31,12 @@ print("Bluetooth connection closed")
 
 
 os.system("sudo nmcli dev wifi rescan")
-connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F") 
+connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F ifname "+iface) 
 while connected == 2560: #2560 is the error code that is returned when nmcli cannot connect to the gopro, so this is essentially "while cannot find the gopro"
 	print("retrying")
 	time.sleep(5)
 	os.system("sudo nmcli dev wifi rescan")
-	connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F")
+	connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F ifname "+iface)
 	#this loop usually takes around 2-4 tries to find it, so dont freak out if it cant find it immediately
 
 
@@ -41,9 +44,9 @@ while connected == 2560: #2560 is the error code that is returned when nmcli can
 
 while(True):
 
-	requests.get(url = "http://10.5.5.9:8080/gopro/camera/keep_alive" )
+	response = requests.get(url = "http://10.5.5.9:8080/gopro/camera/keep_alive" )
 	time.sleep(3)
-	print("sent keep-alive")
+	print("sent keep-alive with status "+str(response.status_code))
 
 
 """
