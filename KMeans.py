@@ -3,7 +3,7 @@ from sklearn.cluster import KMeans
 from PIL import Image
 
 
-def kmeans_color_segmentation(image_path, num_clusters=2, tolerance=255, resize_factor=0.05):
+def kmeans_color_segmentation(image_path, num_clusters=2, tolerance=180, resize_factor=0.6):
     image = Image.open(image_path)
     image = image.convert("RGB")
 
@@ -36,11 +36,14 @@ def kmeans_color_segmentation(image_path, num_clusters=2, tolerance=255, resize_
     # Resize the segmented image back to the original size
     segmented_image = segmented_image.resize((image.width, image.height))
 
+    # save this new image onto the pi to run further edge detection and such
+    segmented_image.save("segmented_image.jpg")
+
     return segmented_image
 
 
-image_path = 'recent.jpg'
-segmented_image = kmeans_color_segmentation(image_path, num_clusters=2, tolerance=255, resize_factor=0.05)
+image_path = 'test.png'
+segmented_image = kmeans_color_segmentation(image_path, num_clusters=2, tolerance=180, resize_factor=0.6)
 
 # Display
 segmented_image.show()
