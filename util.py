@@ -3,52 +3,52 @@
 #goals of this file are centralization, implmenting multithreading/multiprocessing, have the main loop that will be running during flight
 
 
-import requests,json,time,threading
+import requests,json,time,threading,os,socket
 from PIL import Image
+from io import BytesIO
+import open_gopro
 #globals
 finished = False
 ip = "http://10.5.5.9:8080"
 def getImage():
 
-        #set to photo mode
-        command = "/gopro/camera/set_group?1d=1001"
-        requests.get(url=ip+command)
+	#set to photo mode
+	command = "/gopro/camera/presets/set_group?id=1001"
+	requests.get(url=ip+command)
 	#take photo
+	waitForCamera()
 	command = "/gopro/camera/shutter/start"
 	requests.get(url=ip+command)
 
 
         #waits for busy flag to be set to false
-	waitForCamera():
-             
-        command = "/gopro/camera/list"                 
+	print(waitForCamera())
+	command = "/gopro/media/list"
 	r = requests.get(url=ip+command)
-
+	
 	recent = r.json()["media"][0]["fs"][-1]["n"]
-
+	
 	command = "/videos/DCIM/100GOPRO/"+recent
 	r = requests.get(url=ip+command)
-	print(type(r.content))
-	#i = BytesIO(r.content)
 	return r.content
 
 
-    
 def waitForCamera():
+
         command = "/gopro/camera/state"
         busytime = 0
-	response = requests.get(url=ip+command) 
+        response = requests.get(url=ip+command) 
         while response.json()["status"]["8"] == 1:
                 time.sleep(0.1)
                 busytime+=0.1
                 response = requests.get(url=ip+command)
         return busytime
 def connectToCamera(iface):
-        
-        if iface=="":
-                iface = "wlan0"
 
-        gopro = WirelessGoPro(enable_wifi=False)
+        #if iface=="":
+        #       iface = "wlan0"
+
+        gopro =open_gopro.WirelessGoPro(enable_wifi=False)
         print("opening GoPro Bluetooth connection..")
         gopro.open()
 
@@ -72,7 +72,7 @@ def connectToCamera(iface):
 
         keepAliveThread = threading.Thread(target = keepAlive, args = (60,), daemon = True )
         keepAliveThread.start()
-        keepAliveThread.join()
+        #keepAliveThread.join()
 
         
 
@@ -84,4 +84,22 @@ def keepAlive(interval):
                 if finished:
                         break
         
+def sendData(data):
+	HOST = '192.168.1.1'
+	PORT = 49161
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	s.connect((HOST,PORT))
+	s.send(data)
+	return s.recv(1024)
+	
 
+def main():
+	connectToCamera("wlan0")
+	data = getImage()
+	sendData(data)
+
+	finished = True
+
+	
+if __name__ == "__main__":
+	main()

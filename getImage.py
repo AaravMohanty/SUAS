@@ -14,17 +14,10 @@ def getImage():
 	requests.get(url=ip+command)
 
 
-	command = "/gopro/media/list"
-
-	r = requests.get(url=ip+command)
-	busytime = 0
-	while len(r.json().keys()) == 1:
-		time.sleep(0.1)
-		r = requests.get(url=ip+command)
-		busytime += 0.1
-	recent = ""
-	print("Gopro was busy for" +str(busytime))
-
+	
+	print(waitForCamera())
+	
+	r = requests.get(ip+"/gopro/media/list")
 	recent = r.json()["media"][0]["fs"][-1]["n"]
 
 	command = "/videos/DCIM/100GOPRO/"+recent
@@ -33,3 +26,17 @@ def getImage():
 	#i = BytesIO(r.content)
 	return r.content
 	
+def waitForCamera():
+	command = "/gopro/media/list"
+
+        r = requests.get(url=ip+command)
+        busytime = 0
+        while len(r.json().keys()) == 1:
+                time.sleep(0.1)
+                r = requests.get(url=ip+command)
+                busytime += 0.1
+	return busytime
+def photoMode():
+	command = 
+
+

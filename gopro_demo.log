@@ -1,0 +1,1 @@
+   MainThread:17:11:18.874 photo.py                                   51 ERROR    | RuntimeError('The Wifi driver parses CLI responses and only supports en_US where your language is en_GB.UTF-8')
