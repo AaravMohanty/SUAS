@@ -1,0 +1,47 @@
+#this program connects to the gopro via bluetooth, enables the wireless ap and then creates an http get request for the cameras state. this is mainly a proof opf concept, and will eventually be modified to open a udp stream that
+#we can use for cv.
+
+#NOTES 
+#should probably migrate to using subprocess library at some point, seems more robust than os
+#
+
+#MUST RUN THIS WITH THIS COMMAND
+#sudo -E python Connect_to_Gopro.py
+#if you are getting a permission error its because you didnt use the command above
+
+from open_gopro import WirelessGoPro
+import open_gopro,os,time,requests
+
+
+gopro = WirelessGoPro(enable_wifi=False)
+print("opening GoPro Bluetooth connection..")
+gopro.open()
+
+print("connected")
+gopro.ble_command.enable_wifi_ap(enable=True)
+
+print("wifi AP enabled")
+
+gopro.close()
+print("Bluetooth connection closed")
+
+
+os.system("sudo nmcli dev wifi rescan")
+connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F") 
+while connected == 2560: #2560 is the error code that is returned when nmcli cannot connect to the gopro, so this is essentially "while cannot find the gopro"
+	print("retrying")
+	time.sleep(5)
+	os.system("sudo nmcli dev wifi rescan")
+	connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F")
+	#this loop usually takes around 2-4 tries to find it, so dont freak out if it cant find it immediately
+
+
+"""
+time.sleep(5)
+command = "http://10.5.5.9:8080/gopro/camera/state"
+
+r = requests.get(url=command)
+data = r.json()
+
+print(data)
+"""
