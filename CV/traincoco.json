@@ -41,8 +41,7 @@
             "width": 186,
             "id": 6,
             "file_name": "images/IMG_1670.jpg"
-        },
-        {
+        },        {
             "height": 42,
             "width": 191,
             "id": 7,
@@ -62,11 +61,6 @@
         }
     ],
     "categories": [
-        {
-            "supercategory": "none",
-            "id": 0,
-            "name": "None"
-        },
         {
             "supercategory": "None",
             "id": 1,

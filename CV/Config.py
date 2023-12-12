@@ -7,7 +7,8 @@ model = dict(
         bbox_head=dict(num_classes=1)))
 
 # Modify dataset related settings
-data_root = 'C:/Users/15712/PycharmProjects/UAV/'
+dataset_type = 'CocoDataset'
+data_root = '/home/rpi/SUAS/CV/'
 metainfo = {
     'classes': ('watch', ),
     'palette': [
@@ -26,11 +27,15 @@ val_dataloader = dict(
         data_root=data_root,
         metainfo=metainfo,
         ann_file='traincoco.json',
-        data_prefix=dict(img='val/')))
+        data_prefix=dict(img='')))
 test_dataloader = val_dataloader
 
 # Modify metric related settings
-val_evaluator = dict(ann_file=data_root + 'traincoco.json')
+val_evaluator = dict(ann_file=data_root + 'traincoco.json',
+	metric = ['bbox']
+
+
+)
 test_evaluator = val_evaluator
 
 # We can use the pre-trained Mask RCNN model to obtain higher performance
