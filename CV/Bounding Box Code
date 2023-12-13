@@ -1,0 +1,13 @@
+import cv2
+import os
+
+for i in os.listdir(r'C:\Users\aiman\StemClub\BeginPython\ComputerVision\images'):
+    if i != "desktop.ini":
+        image = cv2.imread (f"images/{i}")
+        cv2.imshow("image", image)
+        marker = cv2.selectROI("image", image, fromCenter=False, showCrosshair=True)
+
+        print(f"images/{i},{marker}")
+
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
