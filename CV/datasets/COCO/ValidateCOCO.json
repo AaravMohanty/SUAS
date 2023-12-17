@@ -33,11 +33,6 @@
     ],
     "categories": [
         {
-            "supercategory": "none",
-            "id": 0,
-            "name": "None"
-        },
-        {
             "supercategory": "None",
             "id": 1,
             "name": "watch"

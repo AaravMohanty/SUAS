@@ -63,11 +63,6 @@
     ],
     "categories": [
         {
-            "supercategory": "none",
-            "id": 0,
-            "name": "None"
-        },
-        {
             "supercategory": "None",
             "id": 1,
             "name": "watch"
@@ -93,8 +88,7 @@
             "iscrowd": 0,
             "area": 6468,
             "image_id": 1,
-            "bbox": [
-                11,
+            "bbox": [                11,
                 98,
                 154,
                 42
