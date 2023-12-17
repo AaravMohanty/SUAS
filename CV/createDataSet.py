@@ -3,17 +3,19 @@ import numpy as np
 import pandas as pd
 from pprint import pprint
 #constants
-csvpath = 'datasets/CSV/trainWatch.csv'
-cocopath = 'datasets/COCO/trainWatch.json'
+csvpath = 'datasets/CSV/validateWatch.csv'
+cocopath = 'datasets/COCO/validateWatch.json'
 with open(csvpath, 'w',newline = '') as file:
     writer = csv.writer(file)
     fields = ['filename','class','width', 'height','xmin','ymin','xmax','ymax']
     writer.writerow(fields)
-    for i in os.listdir(r'watchImages'):
+    for i in os.listdir(r'images'):
         if i != "desktop.ini":
-            image = cv2.imread (f"watchImages/{i}")
-            cv2.imshow("image", image)
-            marker = cv2.selectROI("image", image, fromCenter=False, showCrosshair=True)
+            image = cv2.imread (f"images/{i}")
+            cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
+
+            cv2.imshow("Image",image)
+            marker = cv2.selectROI("Image", image, fromCenter=False, showCrosshair=True)
             marker = list(marker)
             #append xmax
             marker.append(marker[0]+marker[2])

@@ -20,19 +20,18 @@ train_dataloader = dict(
     dataset=dict(
         data_root=data_root,
         metainfo=metainfo,
-        ann_file='traincoco.json',
-        data_prefix=dict(img='')))
+        ann_file='datasets/COCO/trainWatch.json',
+        data_prefix=dict(img='watchImages/')))
 val_dataloader = dict(
     dataset=dict(
         data_root=data_root,
         metainfo=metainfo,
-        ann_file='traincoco.json',
-        data_prefix=dict(img='')))
+        ann_file='datasets/COCO/validateWatch.json',
+        data_prefix=dict(img='images/')))
 test_dataloader = val_dataloader
 
 # Modify metric related settings
-val_evaluator = dict(ann_file=data_root + 'traincoco.json',
-	metric = ['bbox']
+val_evaluator = dict(ann_file=data_root + 'datasets/COCO/validateWatch.json',
 
 
 )
