@@ -1,0 +1,24 @@
+import socket
+
+
+
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#AF(address family)_INET, its the ip. SOCK_STREAM is TCP
+server.bind(('localhost',1002))
+#give address. localhost is our computer. 1002 is port for us.
+server.listen()
+#accept incoming connections
+
+client_socket, client_address = server.accept()
+
+file = open('server_image.jpg', "wb")
+image_chunk = client_socket.recv(2048)
+#stream based protocol. 2048 bytes per packet
+
+while image_chunk:
+    file.write(image_chunk)
+    image_chunk = client_socket.recv(2048)
+#while each chunk comes the loop writes 
+
+file.close
+client_socket.close()
