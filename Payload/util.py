@@ -4,40 +4,42 @@
 
 
 import requests,json,time,threading
+from open_gopro import WirelessGoPro
+import os
 from PIL import Image
 #globals
 finished = False
 ip = "http://10.5.5.9:8080"
 def getImage():
 
-        #set to photo mode
-        command = "/gopro/camera/set_group?1d=1001"
-        requests.get(url=ip+command)
+    #set to photo mode
+    command = "/gopro/camera/set_group?1d=1001"
+    requests.get(url=ip+command)
 	#take photo
-	command = "/gopro/camera/shutter/start"
-	requests.get(url=ip+command)
+    command = "/gopro/camera/shutter/start"
+    requests.get(url=ip+command)
 
 
-        #waits for busy flag to be set to false
-	waitForCamera():
+    #waits for busy flag to be set to false
+    waitForCamera()
              
-        command = "/gopro/camera/list"                 
-	r = requests.get(url=ip+command)
+    command = "/gopro/camera/list"                 
+    r = requests.get(url=ip+command)
 
-	recent = r.json()["media"][0]["fs"][-1]["n"]
+    recent = r.json()["media"][0]["fs"][-1]["n"]
 
-	command = "/videos/DCIM/100GOPRO/"+recent
-	r = requests.get(url=ip+command)
-	print(type(r.content))
+    command = "/videos/DCIM/100GOPRO/"+recent
+    r = requests.get(url=ip+command)
+    print(type(r.content))
 	#i = BytesIO(r.content)
-	return r.content
+    return r.content
 
 
     
 def waitForCamera():
         command = "/gopro/camera/state"
         busytime = 0
-	response = requests.get(url=ip+command) 
+        response = requests.get(url=ip+command) 
         while response.json()["status"]["8"] == 1:
                 time.sleep(0.1)
                 busytime+=0.1
@@ -84,4 +86,3 @@ def keepAlive(interval):
                 if finished:
                         break
         
-
