@@ -7,6 +7,7 @@ import requests,json,time,threading,os,socket
 from PIL import Image
 from io import BytesIO
 import open_gopro
+import time
 #globals
 finished = False
 ip = "http://10.5.5.9:8080"
@@ -86,18 +87,23 @@ def keepAlive(interval):
         
 def sendData(data):
 	HOST = '192.168.1.1'
-	PORT = 49161
+	PORT = 25251
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.connect((HOST,PORT))
 	s.send(data)
-	return s.recv(1024)
+	
+	# return s.recv(1024)
 	
 
 def main():
-	connectToCamera("wlan0")
-	data = getImage()
+	#onnectToCamera("wlan0")
+	#data = getImage()
+	pil_im = Image.open("/home/suas/SUAS/CV/GOPR0094.JPG")
+	buf = BytesIO()
+	pil_im.save(buf, format='JPEG')
+	data = buf.getvalue()
+	
 	sendData(data)
-
 	finished = True
 
 	
