@@ -2,16 +2,27 @@
 #this is supposed to be a refactor of the current codebase, for the purposes of centralizing everything
 #goals of this file are centralization, implmenting multithreading/multiprocessing, have the main loop that will be running during flight
 
+<<<<<<< HEAD
 
 
 import requests,json,time,threading
 import open_gopro
 import os
+=======
+#imports
+import requests,json,time,threading,os,subprocess,math
+from open_gopro import WirelessGoPro
+from PIL import Image
+import math
+import asyncio
+from mavsdk import System 
+
+>>>>>>> 0c130c4331a2c124ac29645eb0fbe95ae9b43348
 #globals
 finished = False
 ip = "http://10.5.5.9:8080"
-def getImage():
 
+<<<<<<< HEAD
 
 	#set to photo mode
 	command = "/gopro/camera/presets/set_group?id=1001"
@@ -32,6 +43,9 @@ def getImage():
 	command = "/videos/DCIM/100GOPRO/"+recent
 	r = requests.get(url=ip+command)
 	return r.content
+=======
+def getImage():
+>>>>>>> 0c130c4331a2c124ac29645eb0fbe95ae9b43348
     #set to photo mode
 	command = "/gopro/camera/set_group?1d=1001"
 	requests.get(url=ip+command)
@@ -52,6 +66,7 @@ def getImage():
 	r = requests.get(url=ip+command)
 	print(type(r.content))
 	#i = BytesIO(r.content)
+<<<<<<< HEAD
 	return r.content
 
 def waitForCamera():
@@ -65,6 +80,23 @@ def waitForCamera():
 		response = requests.get(url=ip+command)
 	return busytime
 def connectToCamera(iface):
+=======
+    return r.content
+   
+def waitForCamera():
+        command = "/gopro/camera/state"
+        busytime = 0
+        response = requests.get(url=ip+command) 
+        while response.json()["status"]["8"] == 1:
+                time.sleep(0.1)
+                busytime+=0.1
+                response = requests.get(url=ip+command)
+        return busytime
+
+def connectToCamera(iface):        
+        if iface=="":
+                iface = "wlan0"
+>>>>>>> 0c130c4331a2c124ac29645eb0fbe95ae9b43348
 
         #if iface=="":
         #       iface = "wlan0"
@@ -95,9 +127,8 @@ def connectToCamera(iface):
 	keepAliveThread.start()
         #keepAliveThread.join()
 
-        
-
 def keepAlive(interval):
+<<<<<<< HEAD
 	while(True):
 		response = requests.get(url = "http://10.5.5.9:8080/gopro/camera/keep_alive" )
 		time.sleep(interval)
@@ -111,3 +142,59 @@ def main():
 
 if __name__ == "__main__":
 	main()
+=======
+        while(True):
+                response = requests.get(url = "http://10.5.5.9:8080/gopro/camera/keep_alive" )
+                time.sleep(interval)
+                print("sent keep-alive with status "+str(response.status_code))
+                if finished:
+                        break
+        
+def projectOntoPlane(lang,long):
+        rho = 3,958.8
+        x = rho * math.sin(long) * math.cos(lang)
+        y = rho * math.sin(long) * math.sin(lang)
+        
+        r = math.sqrt(x**2 + y**2)
+        theta = math.atan(y/x)
+        return (r,theta)
+
+def calcDistance(coords1, coords2): # find distance between two coords
+# latitude is phi and longitude is theta relative to earth's center
+
+# converts spherical coordinates (lat & long) to cartesian, then uses distance formula
+# margin of error is +- .1 meters
+    
+    rho1 = coords1[2] + 6378100
+    phi1 = coords1[0]
+    theta1 = coords1[1]
+
+    # cos & sin are swapped for cosphi/sinphi
+    x1 = rho1*math.cos(phi1*math.pi/180)*math.cos(theta1*math.pi/180) # slightly off from typical conversion; idk why but it works
+    y1 = rho1*math.cos(phi1*math.pi/180)*math.sin(theta1*math.pi/180) # slightly off from typical conversion; idk why but it works
+    z1 = rho1*math.sin(phi1*math.pi/180) #
+
+    rho2 = coords2[2] + 6378100
+    phi2 = coords2[0]
+    theta2 = coords2[1]
+
+    #same deal as above
+    x2 = rho2*math.cos(phi2*math.pi/180)*math.cos(theta2*math.pi/180)
+    y2 = rho2*math.cos(phi2*math.pi/180)*math.sin(theta2*math.pi/180)
+    z2 = rho2*math.sin(phi2*math.pi/180)
+    return math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2) # cartesian distance calculated
+
+def connectToPixhawk():
+       async def run():
+              drone = System()
+              await drone.connect(system_address = "serial:///dev/serial0:57600")
+              initialPosition=(0,0,0)
+              async for position in drone.telemetry.position():
+                     currentPosition = (position.latitude_deg, position.longitude_deg, position.relative_altitude_m)
+                     distance = calcDistance (initialPosition, currentPosition)
+                     if distance > 50:
+                        print("image trigger")
+
+def preFlightChecks():
+       
+>>>>>>> 0c130c4331a2c124ac29645eb0fbe95ae9b43348

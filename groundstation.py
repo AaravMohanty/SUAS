@@ -12,7 +12,7 @@ server.bind((HOST,PORT))
 print(server.getsockname())
 server.listen(1)
 
-# code for simulating how bytes are parsed when recieved
+# code for simulating how bytes are parsed when received
 # takes image, chops it up into blocks of 1024, which
 # are added to an array of bytes to be reconstructed babck
 # into the same image
