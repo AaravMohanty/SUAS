@@ -3,7 +3,7 @@
 
 import socket
 
-host = "127.0.0.1"
+host = "192.168.1.1"
 ImagePort = 65432
 GpsPort = 23456
 
