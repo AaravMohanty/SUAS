@@ -23,3 +23,4 @@ def calcDistance(coords1, coords2): # find distance between two coords
     y2 = rho2*math.cos(phi2*math.pi/180)*math.sin(theta2*math.pi/180)
     z2 = rho2*math.sin(phi2*math.pi/180)
     return math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2) # cartesian distance calculated
+
