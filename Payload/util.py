@@ -2,13 +2,7 @@
 #this is supposed to be a refactor of the current codebase, for the purposes of centralizing everything
 #goals of this file are centralization, implmenting multithreading/multiprocessing, have the main loop that will be running during flight
 
-<<<<<<< HEAD
 
-
-import requests,json,time,threading
-import open_gopro
-import os
-=======
 #imports
 import requests,json,time,threading,os,subprocess,math
 from open_gopro import WirelessGoPro
@@ -17,35 +11,11 @@ import math
 import asyncio
 from mavsdk import System 
 
->>>>>>> 0c130c4331a2c124ac29645eb0fbe95ae9b43348
 #globals
 finished = False
 ip = "http://10.5.5.9:8080"
 
-<<<<<<< HEAD
-
-	#set to photo mode
-	command = "/gopro/camera/presets/set_group?id=1001"
-	requests.get(url=ip+command)
-	#take photo
-	waitForCamera()
-	command = "/gopro/camera/shutter/start"
-	requests.get(url=ip+command)
-
-
-        #waits for busy flag to be set to false
-	print(waitForCamera())
-	command = "/gopro/media/list"
-	r = requests.get(url=ip+command)
-	
-	recent = r.json()["media"][0]["fs"][-1]["n"]
-	
-	command = "/videos/DCIM/100GOPRO/"+recent
-	r = requests.get(url=ip+command)
-	return r.content
-=======
 def getImage():
->>>>>>> 0c130c4331a2c124ac29645eb0fbe95ae9b43348
     #set to photo mode
 	command = "/gopro/camera/set_group?1d=1001"
 	requests.get(url=ip+command)
@@ -66,7 +36,6 @@ def getImage():
 	r = requests.get(url=ip+command)
 	print(type(r.content))
 	#i = BytesIO(r.content)
-<<<<<<< HEAD
 	return r.content
 
 def waitForCamera():
@@ -79,25 +48,8 @@ def waitForCamera():
 		busytime+=0.1
 		response = requests.get(url=ip+command)
 	return busytime
+
 def connectToCamera(iface):
-=======
-    return r.content
-   
-def waitForCamera():
-        command = "/gopro/camera/state"
-        busytime = 0
-        response = requests.get(url=ip+command) 
-        while response.json()["status"]["8"] == 1:
-                time.sleep(0.1)
-                busytime+=0.1
-                response = requests.get(url=ip+command)
-        return busytime
-
-def connectToCamera(iface):        
-        if iface=="":
-                iface = "wlan0"
->>>>>>> 0c130c4331a2c124ac29645eb0fbe95ae9b43348
-
         #if iface=="":
         #       iface = "wlan0"
 
@@ -128,13 +80,12 @@ def connectToCamera(iface):
         #keepAliveThread.join()
 
 def keepAlive(interval):
-<<<<<<< HEAD
-	while(True):
-		response = requests.get(url = "http://10.5.5.9:8080/gopro/camera/keep_alive" )
-		time.sleep(interval)
-		print("sent keep-alive with status "+str(response.status_code))
-		if finished:
-			break	
+        while(True):
+                response = requests.get(url = "http://10.5.5.9:8080/gopro/camera/keep_alive" )
+                time.sleep(interval)
+                print("sent keep-alive with status "+str(response.status_code))
+                if finished:
+                        break
 
 def main():
 	connectToCamera("wlan0")
@@ -142,13 +93,6 @@ def main():
 
 if __name__ == "__main__":
 	main()
-=======
-        while(True):
-                response = requests.get(url = "http://10.5.5.9:8080/gopro/camera/keep_alive" )
-                time.sleep(interval)
-                print("sent keep-alive with status "+str(response.status_code))
-                if finished:
-                        break
         
 def projectOntoPlane(lang,long):
         rho = 3,958.8
@@ -197,4 +141,3 @@ def connectToPixhawk():
 
 def preFlightChecks():
        
->>>>>>> 0c130c4331a2c124ac29645eb0fbe95ae9b43348
