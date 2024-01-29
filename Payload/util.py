@@ -9,6 +9,8 @@ from PIL import Image
 import math
 import asyncio
 from mavsdk import System 
+from subprocess import check_output
+from pythonping import ping
 
 #globals
 finished = False
@@ -131,4 +133,19 @@ def connectToPixhawk():
                         print("image trigger")
 
 def preFlightChecks():
+       #check wi-fi ssid
+       scanoutput = check_output(["iwlist","wlan0",'scan'])
+       ssid = "Wi-Fi not found"
+       for line in scanoutput.split():
+              line = line.decode("utf-8")
+              if line[:5] == "ESSID":
+                     ssid = line.split('"')[1]
+        print(ssid)
        
+       #check that the pi is connected to the pixhawk
+       #drone.telemetry.Telemetry
+       armed = drone.telemetry.Telemetry(armed)
+       print(armed)
+
+       #ping 192.168.1.1 (ground) for response
+       ping('192.168.1.1', verbose=True)
