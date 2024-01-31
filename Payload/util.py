@@ -87,15 +87,7 @@ def keepAlive(interval):
                 time.sleep(interval)
                 print("sent keep-alive with status "+str(response.status_code))
                 if finished:
-                        break
-
-def main():
-	connectToCamera("wlan0")
-	data = getImage()
-
-if __name__ == "__main__":
-	main()
-        
+                        break       
 def projectOntoPlane(lang,long):
         rho = 3,958.8
         x = rho * math.sin(long) * math.cos(lang)
@@ -130,18 +122,18 @@ def calcDistance(coords1, coords2): # find distance between two coords
     z2 = rho2*math.sin(phi2*math.pi/180)
     return math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2) # cartesian distance calculated
 
-def connectToPixhawk():
-       async def run():
-              drone = System()
-              await drone.connect(system_address = "serial:///dev/serial0:57600")
-              initialPosition=(0,0,0)
+async def connectToPixhawk():
+	drone = System()
+	await drone.connect(system_address = "serial:///dev/serial0:57600")
+	return drone
+'''
               async for position in drone.telemetry.position():
                      currentPosition = (position.latitude_deg, position.longitude_deg, position.relative_altitude_m)
                      distance = calcDistance (initialPosition, currentPosition)
                      if distance > 50:
                         print("image trigger")
-
-def preFlightChecks():
+'''
+async def preFlightChecks(drone):
        #check wi-fi ssid
        scanoutput = check_output(["iwlist","wlan0",'scan'])
        ssid = "Wi-Fi not found"
@@ -149,12 +141,15 @@ def preFlightChecks():
               line = line.decode("utf-8")
               if line[:5] == "ESSID":
                      ssid = line.split('"')[1]
-        print(ssid)
+       print(ssid)
        
        #check that the pi is connected to the pixhawk
        #drone.telemetry.Telemetry
-       armed = drone.telemetry.Telemetry(armed)
-       print(armed)
+       
+       async for i in drone.telemetry.armed():
+              print(i)
+              break
 
        #ping 192.168.1.1 (ground) for response
        ping('192.168.1.1', verbose=True)
+

@@ -1,5 +1,8 @@
 import util
-#intialization 
-connectToCamera("wlan0")
+import asyncio
 
+async def run():
+	drone =  await util.connectToPixhawk()
+	await util.preFlightChecks(drone)
+asyncio.run(run())
 
