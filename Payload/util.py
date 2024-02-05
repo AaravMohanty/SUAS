@@ -2,7 +2,6 @@
 #this is supposed to be a refactor of the current codebase, for the purposes of centralizing everything
 #goals of this file are centralization, implmenting multithreading/multiprocessing, have the main loop that will be running during flight
 
-
 #imports
 import requests,json,time,threading,os,subprocess,math
 from open_gopro import WirelessGoPro
@@ -11,75 +10,73 @@ import math
 import asyncio
 from mavsdk import System 
 from subprocess import check_output
-from pythonping import ping
+#from pythonping import ping
 
 #globals
 finished = False
 ip = "http://10.5.5.9:8080"
+check1=False
 
 def getImage():
     #set to photo mode
-	command = "/gopro/camera/set_group?1d=1001"
-	requests.get(url=ip+command)
+    command = "/gopro/camera/set_group?1d=1001"
+    requests.get(url=ip+command)
 	#take photo
-	command = "/gopro/camera/shutter/start"
-	requests.get(url=ip+command)
+    command = "/gopro/camera/shutter/start"
+    requests.get(url=ip+command)
 
 
     #waits for busy flag to be set to false
-	waitForCamera()
+    waitForCamera()
              
-	command = "/gopro/camera/list"                 
-	r = requests.get(url=ip+command)
+    command = "/gopro/camera/list"                 
+    r = requests.get(url=ip+command)
 
-	recent = r.json()["media"][0]["fs"][-1]["n"]
+    recent = r.json()["media"][0]["fs"][-1]["n"]
 
-	command = "/videos/DCIM/100GOPRO/"+recent
-	r = requests.get(url=ip+command)
-	print(type(r.content))
+    command = "/videos/DCIM/100GOPRO/"+recent
+    r = requests.get(url=ip+command)
+    print(type(r.content))
 	#i = BytesIO(r.content)
-	return r.content
-
+    return r.content
+   
 def waitForCamera():
+        command = "/gopro/camera/state"
+        busytime = 0
+        response = requests.get(url=ip+command) 
+        while response.json()["status"]["8"] == 1:
+                time.sleep(0.1)
+                busytime+=0.1
+                response = requests.get(url=ip+command)
+        return busytime
 
-	command = "/gopro/camera/state"
-	busytime = 0
-	response = requests.get(url=ip+command) 
-	while response.json()["status"]["8"] == 1:
-		time.sleep(0.1)
-		busytime+=0.1
-		response = requests.get(url=ip+command)
-	return busytime
+def connectToCamera(iface):        
+        if (check1==False):
+		if iface=="":
+	                iface = "wlan0"
 
-def connectToCamera(iface):
-        #if iface=="":
-        #       iface = "wlan0"
+	        gopro = WirelessGoPro(enable_wifi=False)
+	        print("opening GoPro Bluetooth connection..")
+	        gopro.open()
 
-	gopro =open_gopro.WirelessGoPro(enable_wifi=False)
-	print("opening GoPro Bluetooth connection..")
-	gopro.open()
+	        print("connected")
+	        gopro.ble_command.enable_wifi_ap(enable=True)
 
-	print("connected")
-	gopro.ble_command.enable_wifi_ap(enable=True)
+	        print("wifi AP enabled")
 
-	print("wifi AP enabled")
-
-	gopro.close()
-	print("Bluetooth connection closed")
+	        gopro.close()
+	        print("Bluetooth connection closed")
 
 
-	os.system("sudo nmcli dev wifi rescan")
-	connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F ifname "+ iface)
-	while connected == 2560: #2560 is the error code that is returned when nmcli cannot connect to the gopro, so this is essentially "while cannot find the gopro"
-		print("retrying")
-		time.sleep(5)
-		os.system("sudo nmcli dev wifi rescan")
-		connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F ifname "+ iface)
-                #this loop usually takes around 2-4 tries to find it, so dont freak out if it cant find it immediately
+	        os.system("sudo nmcli dev wifi rescan")
+	        connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F ifname "+iface) 
+	        while connected == 2560: #2560 is the error code that is returned when nmcli cannot connect to the gopro, so this is essentially "while cannot find the gopro"
+	                print("retrying")
+	                time.sleep(5)
+	                os.system("sudo nmcli dev wifi rescan")
+	                connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F ifname "+iface)
+	                #this loop usually takes around 2-4 tries to find it, so dont freak out if it cant find it immediately
 
-	keepAliveThread = threading.Thread(target = keepAlive, args = (60,), daemon = True )
-	keepAliveThread.start()
-        #keepAliveThread.join()
 
 def keepAlive(interval):
         while(True):
@@ -87,7 +84,9 @@ def keepAlive(interval):
                 time.sleep(interval)
                 print("sent keep-alive with status "+str(response.status_code))
                 if finished:
-                        break       
+                      break
+
+
 def projectOntoPlane(lang,long):
         rho = 3,958.8
         x = rho * math.sin(long) * math.cos(lang)
@@ -133,23 +132,46 @@ async def connectToPixhawk():
                      if distance > 50:
                         print("image trigger")
 '''
-async def preFlightChecks(drone):
-       #check wi-fi ssid
-       scanoutput = check_output(["iwlist","wlan0",'scan'])
-       ssid = "Wi-Fi not found"
-       for line in scanoutput.split():
-              line = line.decode("utf-8")
-              if line[:5] == "ESSID":
-                     ssid = line.split('"')[1]
-       print(ssid)
-       
-       #check that the pi is connected to the pixhawk
-       #drone.telemetry.Telemetry
-       
-       async for i in drone.telemetry.armed():
-              print(i)
-              break
 
-       #ping 192.168.1.1 (ground) for response
-       ping('192.168.1.1', verbose=True)
+async def preFlightChecks(drone):
+	check2=False
+	check3=False
+
+        #check wi-fi ssid
+	scanoutput = check_output(["iwlist","wlan0",'scan'])
+	ssid = "Wi-Fi not found"
+	for line in scanoutput.split():
+		line = line.decode("utf-8")
+		if line[:5] == "ESSID":
+			ssid = line.split('"')[1]
+	print(ssid)
+	check1 = ssid.startswith("HERO10")
+        #check that the pi is connected to the pixhawk
+	async for i in drone.telemetry.armed():
+		check2 = i
+		break
+        
+        #ping 192.168.1.1 (ground) for response
+	pingGround = subprocess.check_output(["ping","-c","1","192.168.1.1"])
+	check3=pingGround
+              #ping('192.168.1.1', verbose=True)
+        
+
+        #return results
+	if(check1 and check2 and check3):
+		print("Checks completed with no issues.")
+	elif(check1 and check2):
+		print("Issue with pinging ground.")
+	elif(check1 and check3):
+		print("Issue with connecting to pixhawk.")
+	elif(check2 and check3):
+		print("Issue with wifi ssid.")
+	elif(check1):
+		print("Issues with connecting to pixhawk and pinging ground.")
+	elif(check2):
+		print("Issues with wifi ssid and pinging ground.")
+	elif(check3):
+		print("Issues with wifi ssid and connecting to pixhawk.")
+	else:
+		print("All pre-flight checks failed.")
 
