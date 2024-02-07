@@ -86,8 +86,27 @@ def two_at_once(gps_port, image_port):
                 if sock is Gpsconnection:
                     data, addr = Gpsconnection.recvfrom(1024) # max 1024
                     if (data != b''):
-                        # save gps coords
+                        # decode GPS data
+                        # format: id,longitude,latitude,altitude,compass_heading
                         print(f'Gps server received stuff from {addr}: {data}')
+                        # convert bytes to string
+                        data_str = data.decode()
+                        # now it looks like 1,2,3,4,5
+                        # split it by commas into a list of strings
+                        num_strings = data_str.split(',')
+                        # loop through and convert to numbers
+                        gps_data_vals = list(map(float, num_strings))
+                        id = gps_data_vals[0]
+                        longitude = gps_data_vals[1]
+                        latitude = gps_data_vals[2]
+                        altitude = gps_data_vals[3]
+                        heading = gps_data_vals[4]
+
+                        # save a file with name:
+                        # id,longitude,latitude,altitude,heading.jpg
+                        format_str = '{id},{long},{lat},{alt},{head}.jpg'
+                        filename = format_str.format(id=id, long=longitude, lat = latitude, alt = altitude, head = heading)
+                        print("Pretended to write a file with name: " + filename)
                     else:
                         # increment empty counter
                         emptymessages += 1
