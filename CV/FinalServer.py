@@ -84,9 +84,6 @@ def two_at_once(gps_port, image_port):
                         # decode and keep track of GPS data
                         # format: id,longitude,latitude,altitude,compass_heading
                         last_gps_data = GPSData(data)
-
-                        # save a file with name:
-                        # id,longitude,latitude,altitude,heading.jpg
                     else:
                         # increment empty counter
                         emptymessages += 1
