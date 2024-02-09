@@ -42,13 +42,7 @@ class GPSData:
         Return a file name with the GPS data.
         Format: id,longitude,latitude,altitude,heading.jpg
         """
-        format_str = '{id},{long},{lat},{alt},{head}.jpg'
-        return format_str.format(
-            id=id, 
-            long=self.longitude, 
-            lat = self.latitude, 
-            alt = self.altitude, 
-            head = self.heading)
+        return f'{self.id},{self.longitude},{self.latitude},{self.altitude},{self.heading}.jpg'
     
 last_gps_data: GPSData = None
 
