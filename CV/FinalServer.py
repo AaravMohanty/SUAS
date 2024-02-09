@@ -9,7 +9,48 @@ host = "192.168.1.1"
 ImagePort = 25251
 GpsPort = 25250
 
+class GPSData:
+    """
+    GPS data received from the Raspberry Pi on the drone.
+    """
+    id = int
+    longitude = float
+    latitude = float
+    altitude = float
+    heading = float
 
+    def __init__(self, socket_msg: bytes) -> None:
+        """
+        Decode GPS data from a socket message.
+        Format: id,longitude,latitude,altitude,compass_heading
+        """
+        # convert bytes to string
+        data_str = socket_msg.decode()
+        # now it looks like 1,2,3,4,5
+        # split it by commas into a list of strings
+        num_strings = data_str.split(',')
+        # loop through and convert to numbers
+        gps_data_vals = list(map(float, num_strings))
+        self.id = int(gps_data_vals[0])
+        self.longitude = gps_data_vals[1]
+        self.latitude = gps_data_vals[2]
+        self.altitude = gps_data_vals[3]
+        self.heading = gps_data_vals[4]
+    
+    def into_filename(self) -> str:
+        """
+        Return a file name with the GPS data.
+        Format: id,longitude,latitude,altitude,heading.jpg
+        """
+        format_str = '{id},{long},{lat},{alt},{head}.jpg'
+        return format_str.format(
+            id=id, 
+            long=self.longitude, 
+            lat = self.latitude, 
+            alt = self.altitude, 
+            head = self.heading)
+    
+last_gps_data: GPSData = None
     
 async def listen_gps_coordinates(host, port):
     print(f"Attemping to listen for GPS coordinates on {host}:{port}")
@@ -86,27 +127,13 @@ def two_at_once(gps_port, image_port):
                 if sock is Gpsconnection:
                     data, addr = Gpsconnection.recvfrom(1024) # max 1024
                     if (data != b''):
-                        # decode GPS data
+                        # decode and keep track of GPS data
                         # format: id,longitude,latitude,altitude,compass_heading
-                        print(f'Gps server received stuff from {addr}: {data}')
-                        # convert bytes to string
-                        data_str = data.decode()
-                        # now it looks like 1,2,3,4,5
-                        # split it by commas into a list of strings
-                        num_strings = data_str.split(',')
-                        # loop through and convert to numbers
-                        gps_data_vals = list(map(float, num_strings))
-                        id = gps_data_vals[0]
-                        longitude = gps_data_vals[1]
-                        latitude = gps_data_vals[2]
-                        altitude = gps_data_vals[3]
-                        heading = gps_data_vals[4]
+                        last_gps_data = GPSData(data)
 
                         # save a file with name:
                         # id,longitude,latitude,altitude,heading.jpg
-                        format_str = '{id},{long},{lat},{alt},{head}.jpg'
-                        filename = format_str.format(id=id, long=longitude, lat = latitude, alt = altitude, head = heading)
-                        print("Pretended to write a file with name: " + filename)
+                        print("Pretended to write a file with name: " + last_gps_data.into_filename())
                     else:
                         # increment empty counter
                         emptymessages += 1
