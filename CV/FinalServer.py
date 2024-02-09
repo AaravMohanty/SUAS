@@ -51,81 +51,35 @@ class GPSData:
             head = self.heading)
     
 last_gps_data: GPSData = None
-    
-async def listen_gps_coordinates(host, port):
-    print(f"Attemping to listen for GPS coordinates on {host}:{port}")
-
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Gpsserver:
-        print(f"Listening for GPS coordinates on {host}:{port}")
-        Gpsserver.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        Gpsserver.bind((host,port))
-        Gpsserver.listen()
-        Gpsconnection, Gpsaddress = Gpsserver.accept()
-        print(Gpsserver.getsockname())
-
-        with Gpsconnection:
-            print(f"Connected by {Gpsaddress}")
-            while True:
-                data = Gpsconnection.recv(1024)
-                if not data:
-                    break
-                Stringgps = bytes.decode(data)
-                gpslist = Stringgps.split(",")
-
-                Listweneed = []  #LIST NOT TUPLE 
-                for i in gpslist:
-                    Listweneed.append(float(i))
-
-                Tuplelist = tuple(Listweneed)
-
-
-async def listen_image(host, port):
-    print("Attemping Listening to images on {host}:{port}")
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Imageserver:
-        print("Listening to images on {host}:{port}")
-
-        Imageserver.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        Imageserver.bind((host,port))
-        Imageserver.listen()
-        Imageconnection, Imageaddress = Imageserver.accept()
-
-        #Receiving image    
-        path = "Downloads\\images"
-        totalImage = bytearray
-        with Imageconnection:
-            file = open(f"{path}\{Tuplelist}.png", "wb")
-
-            while (data := Imageconnection.recv(1024)):
-                totalImage += data
-
-            file.write(totalImage)
-            file.close
-
 
 def two_at_once(gps_port, image_port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Gpsserver, socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Imageserver:
-        Gpsserver.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        Gpsserver.bind((host,gps_port))
-        Gpsserver.listen()
-        Imageserver.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        Imageserver.bind((host,image_port))
-        Imageserver.listen()
-        print('listening rn')
-        Gpsconnection, Gpsaddress = Gpsserver.accept() # becomes the new socket
-        ImageConnection, ImageAddress = Imageserver.accept()
-        print('received and accepted connections')
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as gps_server, socket.socket(socket.AF_INET, socket.SOCK_STREAM) as image_server:
+        gps_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        gps_server.bind((host,gps_port))
+        gps_server.listen()
+        print(f'GPS server listening at {host}:{gps_port}')
+        image_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        image_server.bind((host,image_port))
+        image_server.listen()
+        print(f'Image server listening at {host}:{image_port}')
+
+        # wait for the Pi to connect, then accept the connection
+        gps_conn, gps_addr = gps_server.accept() # becomes the new socket
+        print('Received and accepted connection to the Pi for GPS server.')
+        image_conn, image_addr = image_server.accept()
+        print('Received and accepted connection to the Pi for image server.')
         emptymessages = 0
         while True:
             if emptymessages > 1000:
                 break
             
             # blocks until at least one connection receives something
-            ready_socks,_,_ = select.select((Gpsconnection, ImageConnection), [], [])
+            ready_socks,_,_ = select.select((gps_conn, image_conn), [], [])
 
             for sock in ready_socks:
                 
-                if sock is Gpsconnection:
-                    data, addr = Gpsconnection.recvfrom(1024) # max 1024
+                if sock is gps_conn:
+                    data, addr = gps_conn.recvfrom(1024) # max 1024
                     if (data != b''):
                         # decode and keep track of GPS data
                         # format: id,longitude,latitude,altitude,compass_heading
@@ -136,8 +90,8 @@ def two_at_once(gps_port, image_port):
                     else:
                         # increment empty counter
                         emptymessages += 1
-                elif sock is ImageConnection:
-                    data, addr = ImageConnection.recvfrom(1024) # max 1024
+                elif sock is image_conn:
+                    data, addr = image_conn.recvfrom(1024) # max 1024
                     if (data != b''):
                         print(f'Image server received stuff from {addr}: {data}')
                         
@@ -150,18 +104,8 @@ def two_at_once(gps_port, image_port):
                         # increment empty counter
                         emptymessages += 1
                 else:
-                    print('something went horribly wrong')
+                    print('something went horribly wrong, we got a message from a socket that shouldn\'t exist')
 
-
-async def main():
-    gps_task = asyncio.create_task(listen_gps_coordinates(host, GpsPort))
-    image_task = asyncio.create_task(listen_image(host, ImagePort))
-
-
-    await gps_task
-    await image_task
-
-# asyncio.run(main())
 two_at_once(gps_port=GpsPort, image_port=ImagePort)
 
 
