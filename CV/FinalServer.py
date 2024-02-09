@@ -133,15 +133,19 @@ def two_at_once(gps_port, image_port):
 
                         # save a file with name:
                         # id,longitude,latitude,altitude,heading.jpg
-                        print("Pretended to write a file with name: " + last_gps_data.into_filename())
                     else:
                         # increment empty counter
                         emptymessages += 1
                 elif sock is ImageConnection:
                     data, addr = ImageConnection.recvfrom(1024) # max 1024
                     if (data != b''):
-                        # save gps coords
                         print(f'Image server received stuff from {addr}: {data}')
+                        
+                        # save image with most recent GPS data as filename
+                        if (last_gps_data is not None):
+                            print("Pretended to write a file with name: " + last_gps_data.into_filename())
+                        else:
+                            print("Error: received an image before any GPS data was available, could not save image.")
                     else:
                         # increment empty counter
                         emptymessages += 1
