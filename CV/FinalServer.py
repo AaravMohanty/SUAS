@@ -40,9 +40,9 @@ class GPSData:
     def into_filename(self) -> str:
         """
         Return a file name with the GPS data.
-        Format: id,longitude,latitude,altitude,heading.jpg
+        Format: id-longitude-latitude-altitude-heading.jpg
         """
-        return f'{self.id},{self.longitude},{self.latitude},{self.altitude},{self.heading}.jpg'
+        return f'{self.id}-{self.longitude}-{self.latitude}-{self.altitude}-{self.heading}.jpg'
     
 last_gps_data: GPSData = None
 
