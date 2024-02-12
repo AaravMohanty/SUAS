@@ -10,11 +10,15 @@ import math
 import asyncio
 from mavsdk import System 
 from subprocess import check_output
+import socket
 #from pythonping import ping
 
 #globals
 finished = False
 ip = "http://10.5.5.9:8080"
+host = '192.168.1.1'
+GpsPort = 25250
+ImagePort = 25251
 
 def getImage():
     #set to photo mode
@@ -174,14 +178,10 @@ async def preFlightChecks(drone):
 		print("All pre-flight checks failed.")
 	return [check1,check2,check3]
 def initGPSSocket():
-	host = '192.168.1.1'
-	GpsPort = 23456
 	client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	client.connect((host,GpsPort))
 	return client
-def initImageSocket
-	host = '192.168.1.1'
-	ImagePort = 65432
+def initImageSocket():
 	client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	client.connect((host,ImagePort))
 	return client
