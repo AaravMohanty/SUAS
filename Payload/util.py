@@ -35,7 +35,7 @@ def getImage():
 
     command = "/videos/DCIM/100GOPRO/"+recent
     r = requests.get(url=ip+command)
-    print(type(r.content))
+    #print(type(r.content))
 	#i = BytesIO(r.content)
     return r.content
    
@@ -49,35 +49,27 @@ def waitForCamera():
                 response = requests.get(url=ip+command)
         return busytime
 
-def connectToCamera(iface):        
-        if iface=="":
-                iface = "wlan0"
+def connectToCamera(iface):
+	if iface=="":
+		iface = "wlan0"
+	gopro = WirelessGoPro(enable_wifi=False)
+	print("opening GoPro Bluetooth connection..")
+	gopro.open()
 
-        gopro = WirelessGoPro(enable_wifi=False)
-        print("opening GoPro Bluetooth connection..")
-        gopro.open()
-
-        print("connected")
-        gopro.ble_command.enable_wifi_ap(enable=True)
-
-        print("wifi AP enabled")
-
-        gopro.close()
-        print("Bluetooth connection closed")
-
-
-        os.system("sudo nmcli dev wifi rescan")
-        connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F ifname "+iface) 
-        while connected == 2560: #2560 is the error code that is returned when nmcli cannot connect to the gopro, so this is essentially "while cannot find the gopro"
-                print("retrying")
-                time.sleep(5)
-                os.system("sudo nmcli dev wifi rescan")
-                connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F ifname "+iface)
+	print("connected")
+	gopro.ble_command.enable_wifi_ap(enable=True)
+	print("wifi AP enabled")
+	gopro.close()
+	print("Bluetooth connection closed")
+	os.system("sudo nmcli dev wifi rescan")
+	connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F ifname "+iface)
+	while connected == 2560: #2560 is the error code that is returned when nmcli cannot connect to the gopro, so this is essentially "while cannot find the gopro"
+		print("retrying")
+		time.sleep(5)
+		os.system("sudo nmcli dev wifi rescan")
+		connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F ifname "+iface)
                 #this loop usually takes around 2-4 tries to find it, so dont freak out if it cant find it immediately
 
-        keepAliveThread = threading.Thread(target = keepAlive, args = (60,), daemon = True )
-        keepAliveThread.start()
-        keepAliveThread.join()
 
 def keepAlive(interval):
         while(True):
@@ -85,8 +77,9 @@ def keepAlive(interval):
                 time.sleep(interval)
                 print("sent keep-alive with status "+str(response.status_code))
                 if finished:
-                        break
-        
+                      break
+
+
 def projectOntoPlane(lang,long):
         rho = 3,958.8
         x = rho * math.sin(long) * math.cos(lang)
@@ -121,57 +114,74 @@ def calcDistance(coords1, coords2): # find distance between two coords
     z2 = rho2*math.sin(phi2*math.pi/180)
     return math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2) # cartesian distance calculated
 
-def connectToPixhawk():
-       async def run():
-              drone = System()
-              await drone.connect(system_address = "serial:///dev/serial0:57600")
-              initialPosition=(0,0,0)
+async def connectToPixhawk():
+	drone = System()
+	await drone.connect(system_address = "serial:///dev/serial0:57600")
+	return drone
+'''
               async for position in drone.telemetry.position():
                      currentPosition = (position.latitude_deg, position.longitude_deg, position.relative_altitude_m)
                      distance = calcDistance (initialPosition, currentPosition)
                      if distance > 50:
                         print("image trigger")
+'''
 
-async def preFlightChecks():
-        check1 = False
-        check2 = False
-        check3 = False
+async def preFlightChecks(drone):
+	check1 = None	
+	check2 = None
+	check3 = None
 
         #check wi-fi ssid
-        scanoutput = check_output(["iwlist","wlan0",'scan'])
-        ssid = "Wi-Fi not found"
-        for line in scanoutput.split():
-              line = line.decode("utf-8")
-              if line[:5] == "ESSID":
-                     ssid = line.split('"')[1]
-              #print(ssid)
-        check1 = ssid.startsWith("Hero10")       
-        
+	scanoutput = check_output(["iwlist","wlan0",'scan'])
+	ssid = "Wi-Fi not found"
+	for line in scanoutput.split():
+		line = line.decode("utf-8")
+		if line[:5] == "ESSID":
+			ssid = line.split('"')[1]
+	print(ssid)
+	check1 = ssid.startswith("HERO10")
         #check that the pi is connected to the pixhawk
-        async for i in drone.telemetry.armed():
-               check2 = i
-               break
+	async for i in drone.telemetry.armed():
+		check2 = i
+		break
         
         #ping 192.168.1.1 (ground) for response
-        pingGround = subprocess.check_output(["ping","-c","1","192.168.1.1"])
-        check3=pingGround
+	try:
+
+		pingGround = subprocess.check_output(["ping","-c","1","192.168.1.1"])
+		check3 = True
+	except subprocess.CalledProcessError as e:
+		check3 = False
               #ping('192.168.1.1', verbose=True)
         
 
         #return results
-        if(check1==True and check2==True and check3==True):
-              print("Checks completed with no issues.")
-        elif(check1==True and check2==True):
-              print("Issue with pinging ground.")
-        elif(check1==True and check3==True):
-              print("Issue with connecting to pixhawk.")
-        elif(check2==True and check3==True):
-              print("Issue with wifi ssid.")
-        elif(check1==True):
-              print("Issues with connecting to pixhawk and pinging ground.")
-        elif(check2==True):
-              print("Issues with wifi ssid and pinging ground.")
-        elif(check3==True):
-              print("Issues with wifi ssid and connecting to pixhawk.")
-        else:
-              print("All pre-flight checks failed.")
+	if(check1 and check2 and check3):
+		print("Checks completed with no issues.")
+	elif(check1 and check2):
+		print("Issue with pinging ground.")
+	elif(check1 and check3):
+		print("Issue with connecting to pixhawk.")
+	elif(check2 and check3):
+		print("Issue with wifi ssid.")
+	elif(check1):
+		print("Issues with connecting to pixhawk and pinging ground.")
+	elif(check2):
+		print("Issues with wifi ssid and pinging ground.")
+	elif(check3):
+		print("Issues with wifi ssid and connecting to pixhawk.")
+	else:
+		print("All pre-flight checks failed.")
+	return [check1,check2,check3]
+def initGPSSocket():
+	host = '192.168.1.1'
+	GpsPort = 23456
+	client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	client.connect((host,GpsPort))
+	return client
+def initImageSocket
+	host = '192.168.1.1'
+	ImagePort = 65432
+	client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	client.connect((host,ImagePort))
+	return client
