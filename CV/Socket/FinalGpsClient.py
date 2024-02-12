@@ -2,6 +2,8 @@ import socket
 host = "192.168.1.1"
 ImagePort = 25251
 GpsPort = 25250
+# format of GPS data being sent to groundstation:
+# id,longitude,latitude,altitude,compass_heading
 gps = b"1,1.2,2,100,200"
 
 import time
@@ -23,7 +25,7 @@ def main():
                 imgclient.sendall(b"some random image")
                 time.sleep(0.6)
 
-                gpsclient.sendall(b"some gps data")
+                gpsclient.sendall(gps)
                 time.sleep(0.3)
             except KeyboardInterrupt:
                 print('interrupt')

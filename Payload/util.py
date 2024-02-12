@@ -15,7 +15,6 @@ from subprocess import check_output
 #globals
 finished = False
 ip = "http://10.5.5.9:8080"
-check1=False
 
 def getImage():
     #set to photo mode
@@ -36,7 +35,7 @@ def getImage():
 
     command = "/videos/DCIM/100GOPRO/"+recent
     r = requests.get(url=ip+command)
-    print(type(r.content))
+    #print(type(r.content))
 	#i = BytesIO(r.content)
     return r.content
    
@@ -50,32 +49,26 @@ def waitForCamera():
                 response = requests.get(url=ip+command)
         return busytime
 
-def connectToCamera(iface):        
-        if (check1==False):
-		if iface=="":
-	                iface = "wlan0"
+def connectToCamera(iface):
+	if iface=="":
+		iface = "wlan0"
+	gopro = WirelessGoPro(enable_wifi=False)
+	print("opening GoPro Bluetooth connection..")
+	gopro.open()
 
-	        gopro = WirelessGoPro(enable_wifi=False)
-	        print("opening GoPro Bluetooth connection..")
-	        gopro.open()
-
-	        print("connected")
-	        gopro.ble_command.enable_wifi_ap(enable=True)
-
-	        print("wifi AP enabled")
-
-	        gopro.close()
-	        print("Bluetooth connection closed")
-
-
-	        os.system("sudo nmcli dev wifi rescan")
-	        connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F ifname "+iface) 
-	        while connected == 2560: #2560 is the error code that is returned when nmcli cannot connect to the gopro, so this is essentially "while cannot find the gopro"
-	                print("retrying")
-	                time.sleep(5)
-	                os.system("sudo nmcli dev wifi rescan")
-	                connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F ifname "+iface)
-	                #this loop usually takes around 2-4 tries to find it, so dont freak out if it cant find it immediately
+	print("connected")
+	gopro.ble_command.enable_wifi_ap(enable=True)
+	print("wifi AP enabled")
+	gopro.close()
+	print("Bluetooth connection closed")
+	os.system("sudo nmcli dev wifi rescan")
+	connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F ifname "+iface)
+	while connected == 2560: #2560 is the error code that is returned when nmcli cannot connect to the gopro, so this is essentially "while cannot find the gopro"
+		print("retrying")
+		time.sleep(5)
+		os.system("sudo nmcli dev wifi rescan")
+		connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F ifname "+iface)
+                #this loop usually takes around 2-4 tries to find it, so dont freak out if it cant find it immediately
 
 
 def keepAlive(interval):
@@ -134,8 +127,9 @@ async def connectToPixhawk():
 '''
 
 async def preFlightChecks(drone):
-	check2=False
-	check3=False
+	check1 = None	
+	check2 = None
+	check3 = None
 
         #check wi-fi ssid
 	scanoutput = check_output(["iwlist","wlan0",'scan'])
@@ -152,8 +146,12 @@ async def preFlightChecks(drone):
 		break
         
         #ping 192.168.1.1 (ground) for response
-	pingGround = subprocess.check_output(["ping","-c","1","192.168.1.1"])
-	check3=pingGround
+	try:
+
+		pingGround = subprocess.check_output(["ping","-c","1","192.168.1.1"])
+		check3 = True
+	except subprocess.CalledProcessError as e:
+		check3 = False
               #ping('192.168.1.1', verbose=True)
         
 
@@ -174,4 +172,16 @@ async def preFlightChecks(drone):
 		print("Issues with wifi ssid and connecting to pixhawk.")
 	else:
 		print("All pre-flight checks failed.")
-
+	return [check1,check2,check3]
+def initGPSSocket():
+	host = '192.168.1.1'
+	GpsPort = 23456
+	client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	client.connect((host,GpsPort))
+	return client
+def initImageSocket
+	host = '192.168.1.1'
+	ImagePort = 65432
+	client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	client.connect((host,ImagePort))
+	return client
