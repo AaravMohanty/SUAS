@@ -30,12 +30,14 @@ def getImage():
 
 
     #waits for busy flag to be set to false
-    waitForCamera()
+    print('gopro busy for ' + str(waitForCamera()) + 'seconds.')
              
-    command = "/gopro/camera/list"                 
+    command = "/gopro/media/list"                 
     r = requests.get(url=ip+command)
 
-    recent = r.json()["media"][0]["fs"][-1]["n"]
+    json = r.json()
+    print(json)
+    recent = json["media"][0]["fs"][-1]["n"]
 
     command = "/videos/DCIM/100GOPRO/"+recent
     r = requests.get(url=ip+command)
@@ -60,9 +62,9 @@ def connectToCamera(iface):
 	print("opening GoPro Bluetooth connection..")
 	gopro.open()
 
-	print("connected")
+	print("bluetooth connected to GoPro")
 	gopro.ble_command.enable_wifi_ap(enable=True)
-	print("wifi AP enabled")
+	print("wifi AP enabled on GoPro")
 	gopro.close()
 	print("Bluetooth connection closed")
 	os.system("sudo nmcli dev wifi rescan")

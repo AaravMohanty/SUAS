@@ -16,21 +16,22 @@ async def run():
         util.connectToCamera("wlan0")
     initialCord = (0,0,0)
     id = 0
+    print("about to get some coords from the pixhawk:")
     async for cord in drone.telemetry.position():
         print("got a coordinate")
-        currentCord = (cord.latitude_deg. cord.longitude_deg,cord.relative_altitude_m)
+        currentCord = (cord.latitude_deg, cord.longitude_deg,cord.relative_altitude_m)
         distance = util.calcDistance(initialCord, currentCord)
         # if distance > 50:
         mangodog = input()
         if True:
             print("snap a pic and send")
             heading = None
-            async for i in drone.telemetry.Heading():
+            async for i in drone.telemetry.heading():
                     heading = i
                     break
             print("got the last heading")
-            gpsString = b""+id+","+currentCord[0]+","+currentCord[1]+","+currentCord[2]+","+heading
-            GPSSocket.sendall(gpsString)
+            gps_string = f"{id},{currentCord[0]},{currentCord[1]},{currentCord[2]},{heading}"
+            GPSSocket.sendall(str.encode(gps_string))
             id+=1
             ImageSocket.sendall(util.getImage())
 asyncio.run(run())
