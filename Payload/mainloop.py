@@ -26,7 +26,7 @@ async def run():
             print("snap a pic and send")
             heading = None
             async for i in drone.telemetry.Heading():
-                    heading = i
+                    heading = i.heading_deg
                     break
             print("got the last heading")
             gpsString = b""+id+","+currentCord[0]+","+currentCord[1]+","+currentCord[2]+","+heading
