@@ -4,6 +4,8 @@
 import socket
 import asyncio
 import select
+import numpy as np
+import cv2
 
 host = "192.168.1.1"
 ImagePort = 25251
@@ -82,13 +84,22 @@ def two_at_once(gps_port, image_port):
                         # increment empty counter
                         emptymessages += 1
                 elif sock is image_conn:
-                    data, addr = image_conn.recvfrom(1024) # max 1024
-                    if (data != b''):
+                    img_bytes = bytearray()
+                    while data := image_conn.recvfrom(65536):
+                        if data[0] == b'': break
+                        img_bytes += data[0]
+                    # data, addr = image_conn.recvfrom(67108864) # max 1024
+                    if (data != bytearray()):
                         print(f'Image server received stuff from {addr}: {data}')
+                        
                         
                         # save image with most recent GPS data as filename
                         if (last_gps_data is not None):
-                            print("Pretended to write a file with name: " + last_gps_data.into_filename())
+                            # nparray = np.asarray(bytearray(data), dtype="uint8")
+                            bytes_to_buffer_img = np.frombuffer(data, np.uint8)
+                            img = cv2.imdecode(bytes_to_buffer_img, cv2.IMREAD_COLOR)
+                            cv2.imwrite('./images/' + last_gps_data.into_filename(), img)
+                            print("Wrote a file with name: " + last_gps_data.into_filename())
                         else:
                             print("Error: received an image before any GPS data was available, could not save image.")
                     else:
