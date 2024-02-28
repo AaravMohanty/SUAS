@@ -29,6 +29,21 @@ def sendTermination(port):
     msg = struct.pack('>I', 1024) + 'ENDOFDATA'.encode('ASCII')
     port.sendall(msg)
 
+def sendimage(imgclient, gpsclient, data_bytes):
+    while True:
+        try:
+            imgclient.sendall(data_bytes)
+            break
+        except KeyboardInterrupt:
+            print('interrupt')
+            imgclient.shutdown(socket.SHUT_RDWR)
+            gpsclient.shutdown(socket.SHUT_RDWR)
+            imgclient.close()
+            gpsclient.close()
+            try:
+                sys.exit(130)
+            except SystemExit:
+                os._exit(130)
 
 def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as imgclient, socket.socket(socket.AF_INET, socket.SOCK_STREAM) as gpsclient:
@@ -44,21 +59,7 @@ def main():
                 print(imgclient.getsockname())
                 img = open('./CV/images/testimg.jpg', 'rb')
                 data = img.read()
-                # data = img.read(1024)
-                # while(data):
-                #     print(len(data))
-                #     imgclient.send(data)
-                #     data = img.read(1024)
-                # imgclient.sendall(img.read())
-                imgclient.sendall(data)
-                # sendTermination(imgclient)
-                time.sleep(0.6)
-                
-                # imgclient.shutdown(socket.SHUT_RDWR)
-                # gpsclient.shutdown(socket.SHUT_RDWR)
-                # imgclient.close()
-                # gpsclient.close()
-                
+                sendimage(imgclient, gpsclient, data)
                 break
             except KeyboardInterrupt:
                 print('interrupt')
@@ -76,10 +77,6 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         print('interrupt')
-        imgclient.shutdown()
-        gpsclient.shutdown()
-        imgclient.close()
-        gpsclient.close()
         try:
             sys.exit(130)
         except SystemExit:
