@@ -5,49 +5,17 @@ import os
 import socket, struct
 import asyncio
 import select
+import sys
+# caution: path[0] is reserved for script path (or '' in REPL)
+print(os.path.abspath(os.path.join(sys.argv[0], '../..')))
+sys.path.insert(1, os.path.normpath(os.path.join(sys.argv[0], '../..')))
+from Payload.util import GPSData
 import numpy as np
 import cv2
 
 host = "127.0.0.1"
 ImagePort = 25251
 GpsPort = 25250
-
-class GPSData:
-    """
-    GPS data received from the Raspberry Pi on the drone.
-    """
-    id = int
-    longitude = float
-    latitude = float
-    altitude = float
-    heading = float
-
-    
-    def __init__(self, socket_msg: bytes) -> None:
-        """
-        Decode GPS data from a socket message.
-        Format: id,longitude,latitude,altitude,compass_heading
-        """
-        # convert bytes to string
-        data_str = socket_msg.decode()
-        # now it looks like 1,2,3,4,5
-        # split it by commas into a list of strings
-        num_strings = data_str.split(',')
-        # loop through and convert to numbers
-        gps_data_vals = list(map(float, num_strings))
-        self.id = int(gps_data_vals[0])
-        self.longitude = gps_data_vals[1]
-        self.latitude = gps_data_vals[2]
-        self.altitude = gps_data_vals[3]
-        self.heading = gps_data_vals[4]
-    
-    def into_filename(self) -> str:
-        """
-        Return a file name with the GPS data.
-        Format: id-longitude-latitude-altitude-heading.jpg
-        """
-        filename = f'{self.id}-{self.longitude}-{self.latitude}-{self.altitude}-{self.heading}'
-        return filename.replace(".", "_") + ".jpg"
 
 last_gps_data: GPSData = None
 

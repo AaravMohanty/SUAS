@@ -14,6 +14,55 @@ from subprocess import check_output
 import socket
 #from pythonping import ping
 
+class GPSData:
+    """
+    GPS data received from the Raspberry Pi on the drone.
+    """
+    id = int
+    longitude = float
+    latitude = float
+    altitude = float
+    heading = float
+
+    def __init__(self, id, long, lat, alt, head) -> None:
+        self.id = id
+        self.longitude = long
+        self.latitude = lat
+        self.altitude = alt
+        self.heading = head
+    
+    def __init__(self, socket_msg: bytes) -> None:
+        """
+        Decode GPS data from a socket message.
+        Format: id,longitude,latitude,altitude,compass_heading
+        """
+        # convert bytes to string
+        data_str = socket_msg.decode()
+        # now it looks like 1,2,3,4,5
+        # split it by commas into a list of strings
+        num_strings = data_str.split(',')
+        # loop through and convert to numbers
+        gps_data_vals = list(map(float, num_strings))
+        self.id = int(gps_data_vals[0])
+        self.longitude = gps_data_vals[1]
+        self.latitude = gps_data_vals[2]
+        self.altitude = gps_data_vals[3]
+        self.heading = gps_data_vals[4]
+    
+    def into_filename(self) -> str:
+        """
+        Return a file name with the GPS data.
+        Format: id-longitude-latitude-altitude-heading.jpg
+        """
+        filename = f'{self.id}-{self.longitude}-{self.latitude}-{self.altitude}-{self.heading}'
+        return filename.replace(".", "_") + ".jpg"
+    
+    def into_socket_msg(self) -> bytes:
+        """
+        Return a bytestring in the format id,longitude,latitude,altitude,compass_heading
+        """
+        return bytes(f"{self.id},{self.longitude},{self.latitude},{self.altitude},{self.heading}")
+
 #globals
 finished = False
 ip = "http://10.5.5.9:8080"

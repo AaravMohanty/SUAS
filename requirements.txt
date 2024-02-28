@@ -1,2 +1,6 @@
 numpy
 opencv-python
+open-gopro
+requests
+pillow
+mavsdk

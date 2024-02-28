@@ -30,8 +30,8 @@ async def run():
                     heading = i.heading_deg
                     break
             print("got the last heading")
-            gps_string = f"{id},{currentCord[0]},{currentCord[1]},{currentCord[2]},{heading}"
-            gps_socket.sendall(str.encode(gps_string))
+            gps_data = util.GPSData(id, currentCord[0], currentCord[1],currentCord[2],heading)
+            gps_socket.sendall(gps_data.into_socket_msg())
             id+=1
             util.send_image(img_socket, gps_socket, util.getImage())
 asyncio.run(run())
