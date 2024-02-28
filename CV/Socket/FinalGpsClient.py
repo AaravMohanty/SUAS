@@ -46,7 +46,7 @@ def main():
                 #     imgclient.send(data)
                 #     data = img.read(1024)
                 # imgclient.sendall(img.read())
-                imgclient.sendall(img)
+                imgclient.sendall(img.read())
                 # sendTermination(imgclient)
                 time.sleep(0.6)
                 

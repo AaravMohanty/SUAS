@@ -49,24 +49,24 @@ class GPSData:
     
 last_gps_data: GPSData = None
 
-def recvData(server, numBytes):
-    data = bytearray()
-    while len(data) < numBytes:
-        addData = server.recv(numBytes - len(data))
-        if not addData:
-            return None
-        data.extend(addData)
-    return data
+# def recvData(server, numBytes):
+#     data = bytearray()
+#     while len(data) < numBytes:
+#         addData = server.recv(numBytes - len(data))
+#         if not addData:
+#             return None
+#         data.extend(addData)
+#     return data
     
-def recv_msg(port):
-    # get length of packet
-    msgLen = recvData(port, 4)
-    if not msgLen:
-        return None
-    # parse data after the length header
-    # unpack returns a tuple - get index 0 to get actual data
-    msglen = struct.unpack('>I', msgLen)[0]
-    return recvData(port, msglen)
+# def recv_msg(port):
+#     # get length of packet
+#     msgLen = recvData(port, 4)
+#     if not msgLen:
+#         return None
+#     # parse data after the length header
+#     # unpack returns a tuple - get index 0 to get actual data
+#     msglen = struct.unpack('>I', msgLen)[0]
+#     return recvData(port, msglen)
 
 
 def two_at_once(gps_port, image_port):
@@ -106,24 +106,27 @@ def two_at_once(gps_port, image_port):
                         emptymessages += 1
                 elif sock is image_conn:
                     print(image_conn.getsockname())
-                    print("image server!")
-                    img_bytes = recv_msg(image_conn)
+                    print("image server!")                    
                     
-                    
-                    # while data := recvData(image_conn, 1024):
-                    #     data = image_conn.recv(1024)
-                    #     print(len(data))
-                    #     img_bytes += data
-                    print(len(img_bytes))
-                    bytes_to_buffer_img = np.frombuffer(img_bytes, np.uint8)
-                    print(len(bytes_to_buffer_img))
-                    print(bytes_to_buffer_img)
-                    img = cv2.imdecode(bytes_to_buffer_img, cv2.IMREAD_UNCHANGED)
-                    # print(img.shape())
-                    cv2.imwrite('./images/' + last_gps_data.into_filename(), img)
-                    print("Wrote a file with name: " + last_gps_data.into_filename())
+                    img_bytes = bytearray()
+                    while data := recvData(image_conn, 1024):
+                        data = image_conn.recv(1024)
+                        print(len(data))
+                        img_bytes += data
+                        
+                    # if(img_bytes is not None):
+                    #     print(len(img_bytes))
+                    #     bytes_to_buffer_img = np.frombuffer(img_bytes, np.uint8)
+                    #     print(len(bytes_to_buffer_img))
+                    #     print(bytes_to_buffer_img)
+                    #     img = cv2.imdecode(bytes_to_buffer_img, cv2.IMREAD_UNCHANGED)
+                    #     # print(img.shape())
+                    #     cv2.imwrite('./images/' + last_gps_data.into_filename(), img)
+                    #     print("Wrote a file with name: " + last_gps_data.into_filename())
+
+
                     # data, addr = image_conn.recvfrom(67108864) # max 1024
-                    if (data != bytearray()):
+                    if (data != bytearray() and img_bytes is not None):
                         print(f'Image server received stuff from {addr}: {data}')
                         
                         
@@ -132,6 +135,7 @@ def two_at_once(gps_port, image_port):
                             # nparray = np.asarray(bytearray(data), dtype="uint8")
                             bytes_to_buffer_img = np.frombuffer(img_bytes, np.uint8)
                             img = cv2.imdecode(bytes_to_buffer_img, cv2.IMREAD_COLOR)
+                            print(len(bytes_to_buffer_img))
                             cv2.imwrite('./images/' + last_gps_data.into_filename(), img)
                             print("Wrote a file with name: " + last_gps_data.into_filename())
                         else:
