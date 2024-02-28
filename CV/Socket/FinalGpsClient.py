@@ -1,5 +1,8 @@
 import socket, struct
+import sys
 host = "192.168.1.1"
+if len(sys.argv) > 1:
+    host = sys.argv[1]
 ImagePort = 25251
 GpsPort = 25250
 # format of GPS data being sent to groundstation:
@@ -39,14 +42,15 @@ def main():
                 time.sleep(0.3)
                 
                 print(imgclient.getsockname())
-                img = open('SUAS/CV/GOPR0094.JPG', 'rb')
+                img = open('./CV/GOPR0094.JPG', 'rb')
+                print(img.read())
                 # data = img.read(1024)
                 # while(data):
                 #     print(len(data))
                 #     imgclient.send(data)
                 #     data = img.read(1024)
                 # imgclient.sendall(img.read())
-                imgclient.sendall(img)
+                imgclient.sendall(img.read())
                 # sendTermination(imgclient)
                 time.sleep(0.6)
                 
