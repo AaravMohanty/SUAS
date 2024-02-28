@@ -13,7 +13,9 @@ from Payload.util import GPSData
 import numpy as np
 import cv2
 
-host = "127.0.0.1"
+host = "192.168.1.1"
+if len(sys.argv) > 1:
+    host = sys.argv[1]
 ImagePort = 25251
 GpsPort = 25250
 

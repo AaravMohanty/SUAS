@@ -40,9 +40,9 @@ class GPSData:
         data_str = socket_msg.decode()
         # now it looks like 1,2,3,4,5
         # split it by commas into a list of strings
-        num_strings = data_str.split(',')
+        번호 = data_str.split(',')
         # loop through and convert to numbers
-        gps_data_vals = list(map(float, num_strings))
+        gps_data_vals = list(map(float, 번호))
         self.id = int(gps_data_vals[0])
         self.longitude = gps_data_vals[1]
         self.latitude = gps_data_vals[2]
