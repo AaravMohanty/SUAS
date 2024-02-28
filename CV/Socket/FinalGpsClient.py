@@ -42,22 +42,22 @@ def main():
                 time.sleep(0.3)
                 
                 print(imgclient.getsockname())
-                img = open('./CV/GOPR0094.JPG', 'rb')
-                print(img.read())
+                img = open('./CV/images/testimg.jpg', 'rb')
+                data = img.read()
                 # data = img.read(1024)
                 # while(data):
                 #     print(len(data))
                 #     imgclient.send(data)
                 #     data = img.read(1024)
                 # imgclient.sendall(img.read())
-                imgclient.sendall(img.read())
+                imgclient.sendall(data)
                 # sendTermination(imgclient)
                 time.sleep(0.6)
                 
-                imgclient.shutdown(socket.SHUT_RDWR)
-                gpsclient.shutdown(socket.SHUT_RDWR)
-                imgclient.close()
-                gpsclient.close()
+                # imgclient.shutdown(socket.SHUT_RDWR)
+                # gpsclient.shutdown(socket.SHUT_RDWR)
+                # imgclient.close()
+                # gpsclient.close()
                 
                 break
             except KeyboardInterrupt:

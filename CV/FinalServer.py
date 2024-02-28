@@ -1,6 +1,7 @@
 # gps needs to be like this --> [image.PIL, [longitude, latitude, altitude]]
 # --> list within a list!!!
 
+import os
 import socket, struct
 import asyncio
 import select
@@ -45,8 +46,9 @@ class GPSData:
         Return a file name with the GPS data.
         Format: id-longitude-latitude-altitude-heading.jpg
         """
-        return f'{self.id}-{self.longitude}-{self.latitude}-{self.altitude}-{self.heading}.jpg'
-    
+        filename = f'{self.id}-{self.longitude}-{self.latitude}-{self.altitude}-{self.heading}'
+        return filename.replace(".", "_") + ".jpg"
+
 last_gps_data: GPSData = None
 
 # def recvData(server, numBytes):
@@ -105,14 +107,14 @@ def two_at_once(gps_port, image_port):
                         # increment empty counter
                         emptymessages += 1
                 elif sock is image_conn:
-                    print(image_conn.getsockname())
-                    print("image server!")                    
-                    
+                    # print(image_conn.getsockname())
+                    # print("image server receiving data!")                    
+                    addr = None
                     img_bytes = bytearray()
-                    while data := recvData(image_conn, 1024):
-                        data = image_conn.recv(1024)
-                        print(len(data))
-                        img_bytes += data
+                    while (data := image_conn.recvfrom(262144))[0]:
+                        print(len(data[0]))
+                        img_bytes += data[0]
+                        addr = data[1]
                         
                     # if(img_bytes is not None):
                     #     print(len(img_bytes))
@@ -126,8 +128,8 @@ def two_at_once(gps_port, image_port):
 
 
                     # data, addr = image_conn.recvfrom(67108864) # max 1024
-                    if (data != bytearray() and img_bytes is not None):
-                        print(f'Image server received stuff from {addr}: {data}')
+                    if (img_bytes != bytearray()):
+                        print(f'Image server received image from {addr} with size {len(img_bytes)}')
                         
                         
                         # save image with most recent GPS data as filename
@@ -135,9 +137,11 @@ def two_at_once(gps_port, image_port):
                             # nparray = np.asarray(bytearray(data), dtype="uint8")
                             bytes_to_buffer_img = np.frombuffer(img_bytes, np.uint8)
                             img = cv2.imdecode(bytes_to_buffer_img, cv2.IMREAD_COLOR)
-                            print(len(bytes_to_buffer_img))
-                            cv2.imwrite('./images/' + last_gps_data.into_filename(), img)
-                            print("Wrote a file with name: " + last_gps_data.into_filename())
+                            os.makedirs('saved-images', exist_ok=True)
+                            img_path = os.path.normpath(os.path.join(os.getcwd(), "./saved-images/" + last_gps_data.into_filename()))
+                            print("Writing image with size " + str(len(bytes_to_buffer_img)) + " at " + img_path)
+                            cv2.imwrite(img_path, img)
+                            print("Wrote an image with name: " + img_path)
                         else:
                             print("Error: received an image before any GPS data was available, could not save image.")
                     else:
