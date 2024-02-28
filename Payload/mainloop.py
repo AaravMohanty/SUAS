@@ -2,8 +2,8 @@ import util
 import asyncio
 import socket
 async def run():
-    GPSSocket = util.initGPSSocket()
-    ImageSocket = util.initImageSocket()
+    gps_socket = util.initGPSSocket()
+    img_socket = util.initImageSocket()
     print("gps and image socket initialized, connecting to pixhawk...")
     drone =  await util.connectToPixhawk()
     print("connected to pixhawk")
@@ -17,9 +17,9 @@ async def run():
     initialCord = (0,0,0)
     id = 0
     print("about to get some coords from the pixhawk:")
-    async for cord in drone.telemetry.position():
+    async for coord in drone.telemetry.position():
         print("got a coordinate")
-        currentCord = (cord.latitude_deg, cord.longitude_deg,cord.relative_altitude_m)
+        currentCord = (coord.latitude_deg, coord.longitude_deg,coord.relative_altitude_m)
         distance = util.calcDistance(initialCord, currentCord)
         # if distance > 50:
         mangodog = input()
@@ -31,8 +31,8 @@ async def run():
                     break
             print("got the last heading")
             gps_string = f"{id},{currentCord[0]},{currentCord[1]},{currentCord[2]},{heading}"
-            GPSSocket.sendall(str.encode(gps_string))
+            gps_socket.sendall(str.encode(gps_string))
             id+=1
-            ImageSocket.sendall(util.getImage())
+            util.send_image(img_socket, gps_socket, util.getImage())
 asyncio.run(run())
 

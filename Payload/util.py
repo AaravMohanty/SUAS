@@ -3,6 +3,7 @@
 #goals of this file are centralization, implmenting multithreading/multiprocessing, have the main loop that will be running during flight
 
 #imports
+import sys
 import requests,json,time,threading,os,subprocess,math
 from open_gopro import WirelessGoPro
 from PIL import Image
@@ -187,3 +188,19 @@ def initImageSocket():
 	client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	client.connect((host,ImagePort))
 	return client
+
+def send_image(img_socket, gps_socket, data_bytes):
+    while True:
+        try:
+            img_socket.sendall(data_bytes)
+            break
+        except KeyboardInterrupt:
+            print('interrupt')
+            img_socket.shutdown(socket.SHUT_RDWR)
+            gps_socket.shutdown(socket.SHUT_RDWR)
+            img_socket.close()
+            gps_socket.close()
+            try:
+                sys.exit(130)
+            except SystemExit:
+                os._exit(130)
