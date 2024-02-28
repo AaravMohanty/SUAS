@@ -1,7 +1,7 @@
 # gps needs to be like this --> [image.PIL, [longitude, latitude, altitude]]
 # --> list within a list!!!
 
-import socket
+import socket, struct
 import asyncio
 import select
 import numpy as np
@@ -21,6 +21,7 @@ class GPSData:
     altitude = float
     heading = float
 
+    
     def __init__(self, socket_msg: bytes) -> None:
         """
         Decode GPS data from a socket message.
@@ -48,6 +49,26 @@ class GPSData:
     
 last_gps_data: GPSData = None
 
+def recvData(server, numBytes):
+    data = bytearray()
+    while len(data) < numBytes:
+        addData = server.recv(numBytes - len(data))
+        if not addData:
+            return None
+        data.extend(addData)
+    return data
+    
+def recv_msg(port):
+    # get length of packet
+    msgLen = recvData(port, 4)
+    if not msgLen:
+        return None
+    # parse data after the length header
+    # unpack returns a tuple - get index 0 to get actual data
+    msglen = struct.unpack('>I', msgLen)[0]
+    return recvData(port, msglen)
+
+
 def two_at_once(gps_port, image_port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as gps_server, socket.socket(socket.AF_INET, socket.SOCK_STREAM) as image_server:
         gps_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -73,21 +94,34 @@ def two_at_once(gps_port, image_port):
             ready_socks,_,_ = select.select((gps_conn, image_conn), [], [])
 
             for sock in ready_socks:
-                
                 if sock is gps_conn:
                     data, addr = gps_conn.recvfrom(1024) # max 1024
                     if (data != b''):
                         # decode and keep track of GPS data
                         # format: id,longitude,latitude,altitude,compass_heading
                         last_gps_data = GPSData(data)
+                        print(last_gps_data.into_filename())
                     else:
                         # increment empty counter
                         emptymessages += 1
                 elif sock is image_conn:
-                    img_bytes = bytearray()
-                    while data := image_conn.recvfrom(65536):
-                        if data[0] == b'': break
-                        img_bytes += data[0]
+                    print(image_conn.getsockname())
+                    print("image server!")
+                    img_bytes = recv_msg(image_conn)
+                    
+                    
+                    # while data := recvData(image_conn, 1024):
+                    #     data = image_conn.recv(1024)
+                    #     print(len(data))
+                    #     img_bytes += data
+                    print(len(img_bytes))
+                    bytes_to_buffer_img = np.frombuffer(img_bytes, np.uint8)
+                    print(len(bytes_to_buffer_img))
+                    print(bytes_to_buffer_img)
+                    img = cv2.imdecode(bytes_to_buffer_img, cv2.IMREAD_UNCHANGED)
+                    # print(img.shape())
+                    cv2.imwrite('./images/' + last_gps_data.into_filename(), img)
+                    print("Wrote a file with name: " + last_gps_data.into_filename())
                     # data, addr = image_conn.recvfrom(67108864) # max 1024
                     if (data != bytearray()):
                         print(f'Image server received stuff from {addr}: {data}')
@@ -96,7 +130,7 @@ def two_at_once(gps_port, image_port):
                         # save image with most recent GPS data as filename
                         if (last_gps_data is not None):
                             # nparray = np.asarray(bytearray(data), dtype="uint8")
-                            bytes_to_buffer_img = np.frombuffer(data, np.uint8)
+                            bytes_to_buffer_img = np.frombuffer(img_bytes, np.uint8)
                             img = cv2.imdecode(bytes_to_buffer_img, cv2.IMREAD_COLOR)
                             cv2.imwrite('./images/' + last_gps_data.into_filename(), img)
                             print("Wrote a file with name: " + last_gps_data.into_filename())
@@ -107,6 +141,8 @@ def two_at_once(gps_port, image_port):
                         emptymessages += 1
                 else:
                     print('something went horribly wrong, we got a message from a socket that shouldn\'t exist')
+
+
 
 two_at_once(gps_port=GpsPort, image_port=ImagePort)
 
