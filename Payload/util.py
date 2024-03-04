@@ -31,7 +31,8 @@ class GPSData:
         self.altitude = alt
         self.heading = head
     
-    def __init__(self, socket_msg: bytes) -> None:
+    @classmethod
+    def from_socket_msg(self, socket_msg: bytes) -> None:
         """
         Decode GPS data from a socket message.
         Format: id,longitude,latitude,altitude,compass_heading

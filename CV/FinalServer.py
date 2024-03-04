@@ -71,7 +71,7 @@ def two_at_once(gps_port, image_port):
                     if (data != b''):
                         # decode and keep track of GPS data
                         # format: id,longitude,latitude,altitude,compass_heading
-                        last_gps_data = GPSData(data)
+                        last_gps_data = GPSData.from_socket_msg(data)
                         print(last_gps_data.into_filename())
                     else:
                         # increment empty counter
