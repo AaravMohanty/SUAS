@@ -60,6 +60,7 @@ def two_at_once(gps_port, image_port):
         emptymessages = 0
         while True:
             if emptymessages > 1000:
+                print('received 1000 empty msgs, terminating.')
                 break
             
             # blocks until at least one connection receives something
@@ -72,7 +73,7 @@ def two_at_once(gps_port, image_port):
                         # decode and keep track of GPS data
                         # format: id,longitude,latitude,altitude,compass_heading
                         last_gps_data = GPSData.from_socket_msg(data)
-                        print(last_gps_data.into_filename())
+                        print("GPS data received: " + last_gps_data.into_filename())
                     else:
                         # increment empty counter
                         emptymessages += 1
@@ -81,23 +82,12 @@ def two_at_once(gps_port, image_port):
                     # print("image server receiving data!")                    
                     addr = None
                     img_bytes = bytearray()
+                    # print('image server got stuff')
                     while (data := image_conn.recvfrom(262144))[0]:
-                        print(len(data[0]))
+                        # print(len(data[0]))
                         img_bytes += data[0]
                         addr = data[1]
-                        
-                    # if(img_bytes is not None):
-                    #     print(len(img_bytes))
-                    #     bytes_to_buffer_img = np.frombuffer(img_bytes, np.uint8)
-                    #     print(len(bytes_to_buffer_img))
-                    #     print(bytes_to_buffer_img)
-                    #     img = cv2.imdecode(bytes_to_buffer_img, cv2.IMREAD_UNCHANGED)
-                    #     # print(img.shape())
-                    #     cv2.imwrite('./images/' + last_gps_data.into_filename(), img)
-                    #     print("Wrote a file with name: " + last_gps_data.into_filename())
-
-
-                    # data, addr = image_conn.recvfrom(67108864) # max 1024
+        
                     if (img_bytes != bytearray()):
                         print(f'Image server received image from {addr} with size {len(img_bytes)}')
                         
@@ -110,8 +100,11 @@ def two_at_once(gps_port, image_port):
                             os.makedirs('saved-images', exist_ok=True)
                             img_path = os.path.normpath(os.path.join(os.getcwd(), "./saved-images/" + last_gps_data.into_filename()))
                             print("Writing image with size " + str(len(bytes_to_buffer_img)) + " at " + img_path)
-                            cv2.imwrite(img_path, img)
-                            print("Wrote an image with name: " + img_path)
+                            write_success = cv2.imwrite(img_path, img)
+                            if write_success:
+                                print("Wrote an image with name: " + img_path)
+                            else:
+                                print("Failed to write image at path: " + img_path)
                         else:
                             print("Error: received an image before any GPS data was available, could not save image.")
                     else:
