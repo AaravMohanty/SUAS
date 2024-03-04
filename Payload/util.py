@@ -63,7 +63,7 @@ class GPSData:
         """
         Return a bytestring in the format id,longitude,latitude,altitude,compass_heading
         """
-        return bytes(f"{self.id},{self.longitude},{self.latitude},{self.altitude},{self.heading}")
+        return (f"{self.id},{self.longitude},{self.latitude},{self.altitude},{self.heading}").encode('ascii')
 
 #globals
 finished = False
