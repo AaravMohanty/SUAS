@@ -74,7 +74,7 @@ ImagePort = 25251
 
 def getImage():
     #set to photo mode
-    command = "/gopro/camera/set_group?1d=1001"
+    command = "/gopro/camera/set_group?id=1001"
     requests.get(url=ip+command)
 	#take photo
     command = "/gopro/camera/shutter/start"
