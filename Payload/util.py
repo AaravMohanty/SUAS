@@ -32,7 +32,7 @@ class GPSData:
         self.heading = head
     
     @classmethod
-    def from_socket_msg(self, socket_msg: bytes) -> None:
+    def from_socket_msg(cls, socket_msg: bytes) -> None:
         """
         Decode GPS data from a socket message.
         Format: id,longitude,latitude,altitude,compass_heading
@@ -44,11 +44,12 @@ class GPSData:
         번호 = data_str.split(',')
         # loop through and convert to numbers
         gps_data_vals = list(map(float, 번호))
-        self.id = int(gps_data_vals[0])
-        self.longitude = gps_data_vals[1]
-        self.latitude = gps_data_vals[2]
-        self.altitude = gps_data_vals[3]
-        self.heading = gps_data_vals[4]
+        id = int(gps_data_vals[0])
+        lng = gps_data_vals[1]
+        lat = gps_data_vals[2]
+        alt = gps_data_vals[3]
+        head = gps_data_vals[4]
+        return cls(id, lng, lat, alt, head)
     
     def into_filename(self) -> str:
         """
