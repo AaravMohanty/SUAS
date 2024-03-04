@@ -83,6 +83,11 @@ def two_at_once(gps_port, image_port):
                     addr = None
                     img_bytes = bytearray()
                     # print('image server got stuff')
+                    # PROBLEM:
+                    # the three images sent by mainloop are being
+                    # rolled up into one - need to be seperated by some logic
+                    # cv2 is smart enough to take the 3 images concatenated to each other
+                    # and only get the 1st image from the 1st "part" of the data
                     while (data := image_conn.recvfrom(262144))[0]:
                         # print(len(data[0]))
                         img_bytes += data[0]
