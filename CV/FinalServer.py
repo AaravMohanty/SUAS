@@ -40,6 +40,20 @@ last_gps_data: GPSData = None
 #     msglen = struct.unpack('>I', msgLen)[0]
 #     return recvData(port, msglen)
 
+def read_msg_length(sock: socket.socket) -> int: 
+    (data, _) = sock.recvfrom(4)
+    return int.from_bytes(data, byteorder='big', signed=False)
+
+def read_msg(sock: socket.socket, length: int, block_size=262144) -> bytes:
+    result_bytes = bytearray()
+    bytes_left = length
+    while bytes_left > 0:
+        bytes_to_read = block_size
+        if bytes_left < block_size:
+            bytes_to_read = bytes_left
+        (new_bytes, _) = sock.recvfrom(bytes_to_read)
+        result_bytes += new_bytes
+    return result_bytes
 
 def two_at_once(gps_port, image_port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as gps_server, socket.socket(socket.AF_INET, socket.SOCK_STREAM) as image_server:
@@ -78,20 +92,18 @@ def two_at_once(gps_port, image_port):
                         # increment empty counter
                         emptymessages += 1
                 elif sock is image_conn:
-                    # print(image_conn.getsockname())
-                    # print("image server receiving data!")                    
-                    addr = None
-                    img_bytes = bytearray()
+                    msg_length = read_msg_length(sock)
+                    if msg_length == 0:
+                        print("Received msg with length 0, terminating.")
+                        break
+                    img_bytes = read_msg(sock, msg_length)
+
                     # print('image server got stuff')
                     # PROBLEM:
                     # the three images sent by mainloop are being
                     # rolled up into one - need to be seperated by some logic
                     # cv2 is smart enough to take the 3 images concatenated to each other
                     # and only get the 1st image from the 1st "part" of the data
-                    while (data := image_conn.recvfrom(262144))[0]:
-                        # print(len(data[0]))
-                        img_bytes += data[0]
-                        addr = data[1]
         
                     if (img_bytes != bytearray()):
                         print(f'Image server received image from {addr} with size {len(img_bytes)}')
