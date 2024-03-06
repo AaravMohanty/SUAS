@@ -1,5 +1,9 @@
 import socket, struct
-import sys
+import sys, os
+# caution: path[0] is reserved for script path (or '' in REPL)
+print(os.path.abspath(os.path.join(sys.argv[0], '../../..')))
+sys.path.insert(1, os.path.normpath(os.path.join(sys.argv[0], '../../..')))
+from Payload import util
 host = "192.168.1.1"
 if len(sys.argv) > 1:
     host = sys.argv[1]
@@ -29,22 +33,6 @@ def sendTermination(port):
     msg = struct.pack('>I', 1024) + 'ENDOFDATA'.encode('ASCII')
     port.sendall(msg)
 
-def sendimage(imgclient, gpsclient, data_bytes):
-    while True:
-        try:
-            imgclient.sendall(data_bytes)
-            break
-        except KeyboardInterrupt:
-            print('interrupt')
-            imgclient.shutdown(socket.SHUT_RDWR)
-            gpsclient.shutdown(socket.SHUT_RDWR)
-            imgclient.close()
-            gpsclient.close()
-            try:
-                sys.exit(130)
-            except SystemExit:
-                os._exit(130)
-
 def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as imgclient, socket.socket(socket.AF_INET, socket.SOCK_STREAM) as gpsclient:
         imgclient.connect((host,ImagePort))
@@ -59,7 +47,7 @@ def main():
                 print(imgclient.getsockname())
                 img = open('./CV/images/testimg.jpg', 'rb')
                 data = img.read()
-                sendimage(imgclient, gpsclient, data)
+                util.send_image(imgclient, gpsclient, data)
                 break
             except KeyboardInterrupt:
                 print('interrupt')

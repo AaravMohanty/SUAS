@@ -53,6 +53,7 @@ def read_msg(sock: socket.socket, length: int, block_size=262144) -> bytes:
             bytes_to_read = bytes_left
         (new_bytes, _) = sock.recvfrom(bytes_to_read)
         result_bytes += new_bytes
+        bytes_left -= bytes_to_read
     return result_bytes
 
 def two_at_once(gps_port, image_port):
@@ -93,9 +94,10 @@ def two_at_once(gps_port, image_port):
                         emptymessages += 1
                 elif sock is image_conn:
                     msg_length = read_msg_length(sock)
+                    print("image server received msg with length " + str(msg_length))
                     if msg_length == 0:
                         print("Received msg with length 0, terminating.")
-                        break
+                        return
                     img_bytes = read_msg(sock, msg_length)
 
                     # print('image server got stuff')
@@ -119,7 +121,7 @@ def two_at_once(gps_port, image_port):
                             print("Writing image with size " + str(len(bytes_to_buffer_img)) + " at " + img_path)
                             write_success = cv2.imwrite(img_path, img)
                             if write_success:
-                                print("Wrote an image with name: " + img_path)
+                                print("Wrote an image successfully with name: " + img_path)
                             else:
                                 print("Failed to write image at path: " + img_path)
                         else:

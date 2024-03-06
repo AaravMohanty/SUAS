@@ -241,11 +241,18 @@ def initImageSocket():
 	client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	client.connect((host,ImagePort))
 	return client
+
+def send_msg(sock: socket.socket, data_bytes: bytes):
+    length = len(data_bytes)
+    length_header = length.to_bytes(4, byteorder='big', signed=False)
+    sock.sendall(length_header)
+    sock.sendall(data_bytes)
+
 #send image to ground station, with the specified sockets and bytes
-def send_image(img_socket, gps_socket, data_bytes):
+def send_image(img_socket: socket.socket, gps_socket: socket.socket, data_bytes: bytes):
     while True:
         try:
-            img_socket.sendall(data_bytes)
+            send_msg(img_socket, data_bytes)
             break
         except KeyboardInterrupt:
             print('interrupt')
