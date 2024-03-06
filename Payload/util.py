@@ -66,50 +66,53 @@ class GPSData:
         return (f"{self.id},{self.longitude},{self.latitude},{self.altitude},{self.heading}").encode('ascii')
 
 #globals
-finished = False
-ip = "http://10.5.5.9:8080"
-host = '192.168.1.1'
+ip = "http://10.5.5.9:8080" #adress of the gopro
+host = '192.168.1.1' #adress of the groundstation
 GpsPort = 25250
 ImagePort = 25251
 
+#takes an image with the gopro using the http requests specified by the open gopro API
 def getImage():
     #set to photo mode
     command = "/gopro/camera/set_group?id=1001"
     requests.get(url=ip+command)
-	#take photo
+    #take photo
     command = "/gopro/camera/shutter/start"
     requests.get(url=ip+command)
 
 
     #waits for busy flag to be set to false
     print('gopro busy for ' + str(waitForCamera()) + 'seconds.')
-             
+
+    #grab the file directory currently on the gopro         
     command = "/gopro/media/list"                 
     r = requests.get(url=ip+command)
 
     json = r.json()
-    print(json)
+      #grab most recently taken media file, regardless of format
     recent = json["media"][0]["fs"][-1]["n"]
-
+      #download most recent media file 
     command = "/videos/DCIM/100GOPRO/"+recent
     r = requests.get(url=ip+command)
     #print(type(r.content))
 	#i = BytesIO(r.content)
     return r.content
-   
+#Waits until the camera is ready to recieve further commands. returns the number of seconds teh camera was busy for   
 def waitForCamera():
+	  #grab state dictionary of the gopro
         command = "/gopro/camera/state"
         busytime = 0
         response = requests.get(url=ip+command) 
+	  #read off the busy status of the camrea. If the status is 1, the camera is busy
         while response.json()["status"]["8"] == 1:
                 time.sleep(0.1)
                 busytime+=0.1
                 response = requests.get(url=ip+command)
         return busytime
-
-def connectToCamera(iface):
-	if iface=="":
-		iface = "wlan0"
+#connects to the gopro AP with the wifi interface specified. default interface is wlan0
+#utilizes open-gopro api to activate wifi ap on gopro. However, when trying to connect to said AP the open-gopro API fails, hence the need for nmcli
+def connectToCamera(iface = "wlan0"):
+       #create gopro object
 	gopro = WirelessGoPro(enable_wifi=False)
 	print("opening GoPro Bluetooth connection..")
 	gopro.open()
@@ -119,6 +122,7 @@ def connectToCamera(iface):
 	print("wifi AP enabled on GoPro")
 	gopro.close()
 	print("Bluetooth connection closed")
+       #update list of available wifi networks. may take a second
 	os.system("sudo nmcli dev wifi rescan")
 	connected = os.system("nmcli dev wifi connect \"HERO10 Black\" password psY-mjc-Z+F ifname "+iface)
 	while connected == 2560: #2560 is the error code that is returned when nmcli cannot connect to the gopro, so this is essentially "while cannot find the gopro"
@@ -137,7 +141,7 @@ def keepAlive(interval):
                 if finished:
                       break
 
-
+#project the 3-d gps coordinate onto a 2-d plane, allowing us to use a polygonization algorithm for finding the shortest path between nodes
 def projectOntoPlane(lang,long):
         rho = 3,958.8
         x = rho * math.sin(long) * math.cos(lang)
@@ -171,19 +175,15 @@ def calcDistance(coords1, coords2): # find distance between two coords
     y2 = rho2*math.cos(phi2*math.pi/180)*math.sin(theta2*math.pi/180)
     z2 = rho2*math.sin(phi2*math.pi/180)
     return math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2) # cartesian distance calculated
-
+#return a properely initialized drone object, which acts as a way to interface with the pixhawk
 async def connectToPixhawk():
 	drone = System()
-	await drone.connect(system_address = "serial:///dev/serial0:57600")
+	await drone.connect(system_address = "serial:///dev/serial0:57600")#tbh idk if this baudrate is correct but it works
 	return drone
-'''
-              async for position in drone.telemetry.position():
-                     currentPosition = (position.latitude_deg, position.longitude_deg, position.relative_altitude_m)
-                     distance = calcDistance (initialPosition, currentPosition)
-                     if distance > 50:
-                        print("image trigger")
-'''
-
+#takes in a initiliazed drone object and returns a list of booleans signaling if certain pre-flight requirements have been met
+#check1 is making sure the pi is connected to the gopro AP ie SSID == "Hero10 Black"
+#check2 is making sure the pixhawk is armed for flight
+#check 3 is making sure we can ping the ground station
 async def preFlightChecks(drone):
 	check1 = None	
 	check2 = None
@@ -231,6 +231,8 @@ async def preFlightChecks(drone):
 	else:
 		print("All pre-flight checks failed.")
 	return [check1,check2,check3]
+
+#intialize sockets for sending gps and images utilizin socket connections
 def initGPSSocket():
 	client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	client.connect((host,GpsPort))
@@ -239,7 +241,7 @@ def initImageSocket():
 	client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	client.connect((host,ImagePort))
 	return client
-
+#send image to ground station, with the specified sockets and bytes
 def send_image(img_socket, gps_socket, data_bytes):
     while True:
         try:
