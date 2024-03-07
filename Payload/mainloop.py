@@ -39,7 +39,7 @@ async def run():
             gps_data = util.GPSData(
                 id, currentCord[0], currentCord[1], currentCord[2], heading
             )
-            gps_socket.sendall(gps_data.into_socket_msg())
+            util.send_msg(gps_socket, gps_data.into_socket_msg())
             id += 1
             util.send_image(img_socket, gps_socket, util.getImage())
 

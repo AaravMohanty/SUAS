@@ -55,10 +55,9 @@ def main():
             try:
                 print(gpsclient.getsockname())
                 gps = util.GPSData(id, 0, 0, 0, 0)
-                gpsclient.sendall(gps.into_socket_msg())
+                util.send_msg(gpsclient, gps.into_socket_msg())
                 time.sleep(0.3)
 
-                print(imgclient.getsockname())
                 img = open("./CV/images/" + filename, "rb")
                 data = img.read()
                 print("sent image with size " + str(len(data)))
