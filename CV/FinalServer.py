@@ -22,26 +22,6 @@ GpsPort = 25250
 
 last_gps_data: GPSData = None
 
-# def recvData(server, numBytes):
-#     data = bytearray()
-#     while len(data) < numBytes:
-#         addData = server.recv(numBytes - len(data))
-#         if not addData:
-#             return None
-#         data.extend(addData)
-#     return data
-
-# def recv_msg(port):
-#     # get length of packet
-#     msgLen = recvData(port, 4)
-#     if not msgLen:
-#         return None
-#     # parse data after the length header
-#     # unpack returns a tuple - get index 0 to get actual data
-#     msglen = struct.unpack('>I', msgLen)[0]
-#     return recvData(port, msglen)
-
-
 def read_msg_length(sock: socket.socket) -> int:
     (data, _) = sock.recvfrom(4)
     return int.from_bytes(data, byteorder="big", signed=False)

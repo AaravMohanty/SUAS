@@ -1,9 +1,13 @@
-import socket, struct
-import sys, os
+import socket
+import struct
+import sys
+import os
+import time
 
 # caution: path[0] is reserved for script path (or '' in REPL)
 print(os.path.abspath(os.path.join(sys.argv[0], "../../..")))
 sys.path.insert(1, os.path.normpath(os.path.join(sys.argv[0], "../../..")))
+
 from Payload import util
 
 host = "192.168.1.1"
@@ -13,30 +17,12 @@ ImagePort = 25251
 GpsPort = 25250
 test_images = ("IMG_1664.jpg", "IMG_1665.jpg", "IMG_1666.jpg")
 
-import time
-import os
 
 # response = os.system("ping -c 1 " + host)
 # if response == 0:
 # 	print(f"{host} is up!")
 # else:
 # 	print(f"{host} is down.")
-import sys
-
-
-def sendMsg(port, data):
-    # identify different types of data based on len
-    # image packets will have len 1024 for example
-    # allows for easy identification of data type - potentially make gps/image handling easier
-    msg = (
-        struct.pack(
-            ">I",
-            len(data),
-        )
-        + data
-    )
-    port.sendall(msg)
-
 
 def sendTermination(port):
     msg = struct.pack(">I", 1024) + "ENDOFDATA".encode("ASCII")
@@ -84,6 +70,3 @@ if __name__ == "__main__":
             sys.exit(130)
         except SystemExit:
             os._exit(130)
-
-
-# based on https://stackoverflow.com/questions/17667903/python-socket-receive-large-amount-of-data
