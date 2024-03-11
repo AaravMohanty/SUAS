@@ -4,6 +4,7 @@
 
 # imports
 import sys
+from typing import List, Tuple
 import requests, json, time, threading, os, subprocess, math
 from open_gopro import WirelessGoPro
 from PIL import Image
@@ -81,7 +82,7 @@ ImagePort = 25251
 
 
 # takes an image with the gopro using the http requests specified by the open gopro API
-def getImage():
+def getImage() -> bytes:
     # set to photo mode
     command = "/gopro/camera/presets/set_group?id=1001"
     requests.get(url=ip + command)
@@ -108,7 +109,7 @@ def getImage():
 
 
 # Waits until the camera is ready to recieve further commands. returns the number of seconds teh camera was busy for
-def waitForCamera():
+def waitForCamera() -> float:
     # grab state dictionary of the gopro
     command = "/gopro/camera/state"
     busytime = 0
@@ -123,7 +124,7 @@ def waitForCamera():
 
 # connects to the gopro AP with the wifi interface specified. default interface is wlan0
 # utilizes open-gopro api to activate wifi ap on gopro. However, when trying to connect to said AP the open-gopro API fails, hence the need for nmcli
-def connectToCamera(iface="wlan0"):
+def connectToCamera(iface="wlan0") -> None:
     # create gopro object
     gopro = WirelessGoPro(enable_wifi=False)
     print("opening GoPro Bluetooth connection..")
@@ -151,17 +152,17 @@ def connectToCamera(iface="wlan0"):
         # this loop usually takes around 2-4 tries to find it, so dont freak out if it cant find it immediately
 
 
-def keepAlive(interval):
+def keepAlive(interval: float) -> None:
     while True:
         response = requests.get(url="http://10.5.5.9:8080/gopro/camera/keep_alive")
         time.sleep(interval)
         print("sent keep-alive with status " + str(response.status_code))
-        if finished:
-            break
+        # if finished:
+            # break
 
 
 # project the 3-d gps coordinate onto a 2-d plane, allowing us to use a polygonization algorithm for finding the shortest path between nodes
-def projectOntoPlane(lang, long):
+def projectOntoPlane(lang: float, long: float) -> Tuple[float, float]:
     rho = 3, 958.8
     x = rho * math.sin(long) * math.cos(lang)
     y = rho * math.sin(long) * math.sin(lang)
@@ -171,7 +172,8 @@ def projectOntoPlane(lang, long):
     return (r, theta)
 
 
-def calcDistance(coords1, coords2):  # find distance between two coords
+def calcDistance(coords1: List[int, int, int], coords2: List[int, int, int]) -> float:  # find distance between two coords
+    # coords: [latitude (degrees), longitude (degrees), altitude (meters)]
     # latitude is phi and longitude is theta relative to earth's center
 
     # converts spherical coordinates (lat & long) to cartesian, then uses distance formula
@@ -204,7 +206,7 @@ def calcDistance(coords1, coords2):  # find distance between two coords
 
 
 # return a properely initialized drone object, which acts as a way to interface with the pixhawk
-async def connectToPixhawk():
+async def connectToPixhawk() -> System:
     drone = System()
     await drone.connect(
         system_address="serial:///dev/serial0:57600"
@@ -216,7 +218,7 @@ async def connectToPixhawk():
 # check1 is making sure the pi is connected to the gopro AP ie SSID == "Hero10 Black"
 # check2 is making sure the pixhawk is armed for flight
 # check 3 is making sure we can ping the ground station
-async def preFlightChecks(drone):
+async def preFlightChecks(drone: System) -> List[bool, bool, bool]:
     check1 = None
     check2 = None
     check3 = None
@@ -265,19 +267,19 @@ async def preFlightChecks(drone):
 
 
 # intialize sockets for sending gps and images utilizin socket connections
-def initGPSSocket():
+def initGPSSocket() -> socket.socket:
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((host, GpsPort))
     return client
 
 
-def initImageSocket():
+def initImageSocket() -> socket.socket:
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((host, ImagePort))
     return client
 
 
-def send_msg(sock: socket.socket, data_bytes: bytes):
+def send_msg(sock: socket.socket, data_bytes: bytes) -> None:
     length = len(data_bytes)
     length_header = length.to_bytes(4, byteorder="big", signed=False)
     sock.sendall(length_header)
@@ -285,7 +287,7 @@ def send_msg(sock: socket.socket, data_bytes: bytes):
 
 
 # send image to ground station, with the specified sockets and bytes
-def send_image(img_socket: socket.socket, gps_socket: socket.socket, data_bytes: bytes):
+def send_image(img_socket: socket.socket, gps_socket: socket.socket, data_bytes: bytes) -> None:
     while True:
         try:
             send_msg(img_socket, data_bytes)
