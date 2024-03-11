@@ -83,7 +83,7 @@ ImagePort = 25251
 # takes an image with the gopro using the http requests specified by the open gopro API
 def getImage():
     # set to photo mode
-    command = "/gopro/camera/set_group?id=1001"
+    command = "/gopro/camera/presets/set_group?id=1001"
     requests.get(url=ip + command)
     # take photo
     command = "/gopro/camera/shutter/start"
@@ -300,3 +300,20 @@ def send_image(img_socket: socket.socket, gps_socket: socket.socket, data_bytes:
                 sys.exit(130)
             except SystemExit:
                 os._exit(130)
+
+def read_msg_length(sock: socket.socket) -> int:
+    (data, _) = sock.recvfrom(4)
+    return int.from_bytes(data, byteorder="big", signed=False)
+
+
+def read_msg(sock: socket.socket, length: int, block_size=262144) -> bytes:
+    result_bytes = bytearray()
+    bytes_left = length
+    while bytes_left > 0:
+        bytes_to_read = block_size
+        if bytes_left < block_size:
+            bytes_to_read = bytes_left
+        (new_bytes, _) = sock.recvfrom(bytes_to_read)
+        result_bytes += new_bytes
+        bytes_left -= bytes_to_read
+    return result_bytes

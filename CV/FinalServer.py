@@ -10,6 +10,12 @@ import sys
 # caution: path[0] is reserved for script path (or '' in REPL)
 print(os.path.abspath(os.path.join(sys.argv[0], "../..")))
 sys.path.insert(1, os.path.normpath(os.path.join(sys.argv[0], "../..")))
+
+from Payload import util
+
+# caution: path[0] is reserved for script path (or '' in REPL)
+print(os.path.abspath(os.path.join(sys.argv[0], "../..")))
+sys.path.insert(1, os.path.normpath(os.path.join(sys.argv[0], "../..")))
 from Payload.util import GPSData
 import numpy as np
 import cv2
@@ -21,23 +27,6 @@ ImagePort = 25251
 GpsPort = 25250
 
 last_gps_data: GPSData = None
-
-def read_msg_length(sock: socket.socket) -> int:
-    (data, _) = sock.recvfrom(4)
-    return int.from_bytes(data, byteorder="big", signed=False)
-
-
-def read_msg(sock: socket.socket, length: int, block_size=262144) -> bytes:
-    result_bytes = bytearray()
-    bytes_left = length
-    while bytes_left > 0:
-        bytes_to_read = block_size
-        if bytes_left < block_size:
-            bytes_to_read = bytes_left
-        (new_bytes, _) = sock.recvfrom(bytes_to_read)
-        result_bytes += new_bytes
-        bytes_left -= bytes_to_read
-    return result_bytes
 
 
 def two_at_once(gps_port, image_port):
@@ -65,18 +54,18 @@ def two_at_once(gps_port, image_port):
 
             for sock in ready_socks:
                 if sock is gps_conn:
-                    msg_length = read_msg_length(sock)
+                    msg_length = util.read_msg_length(sock)
                     print("gps socket received msg with length " + str(msg_length))
                     if msg_length == 0:
                         print("Received msg with length 0, terminating.")
                         return
-                    data = read_msg(sock, msg_length)
+                    data = util.read_msg(sock, msg_length)
                     # decode and keep track of GPS data
                     # format: id,longitude,latitude,altitude,compass_heading
                     last_gps_data = GPSData.from_socket_msg(data)
                     print("GPS data received: " + last_gps_data.into_filename())
                 elif sock is image_conn:
-                    msg_length = read_msg_length(sock)
+                    msg_length = util.read_msg_length(sock)
                     print("image socket received msg with length " + str(msg_length))
                     if msg_length == 0:
                         print("Received msg with length 0, terminating.")
