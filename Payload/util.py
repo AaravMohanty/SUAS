@@ -73,6 +73,9 @@ class GPSData:
             f"{self.id},{self.longitude},{self.latitude},{self.altitude},{self.heading}"
         ).encode("ascii")
 
+    def into_lat_long(self) -> Tuple[float, float]:
+        return (self.latitude, self.longitude)
+
 
 # globals
 ip = "http://10.5.5.9:8080"  # adress of the gopro
@@ -158,7 +161,7 @@ def keepAlive(interval: float) -> None:
         time.sleep(interval)
         print("sent keep-alive with status " + str(response.status_code))
         # if finished:
-            # break
+        # break
 
 
 # project the 3-d gps coordinate onto a 2-d plane, allowing us to use a polygonization algorithm for finding the shortest path between nodes
@@ -172,7 +175,9 @@ def projectOntoPlane(lang: float, long: float) -> Tuple[float, float]:
     return (r, theta)
 
 
-def calcDistance(coords1: List[int, int, int], coords2: List[int, int, int]) -> float:  # find distance between two coords
+def calcDistance(
+    coords1: List[int, int, int], coords2: List[int, int, int]
+) -> float:  # find distance between two coords
     # coords: [latitude (degrees), longitude (degrees), altitude (meters)]
     # latitude is phi and longitude is theta relative to earth's center
 
@@ -287,7 +292,9 @@ def send_msg(sock: socket.socket, data_bytes: bytes) -> None:
 
 
 # send image to ground station, with the specified sockets and bytes
-def send_image(img_socket: socket.socket, gps_socket: socket.socket, data_bytes: bytes) -> None:
+def send_image(
+    img_socket: socket.socket, gps_socket: socket.socket, data_bytes: bytes
+) -> None:
     while True:
         try:
             send_msg(img_socket, data_bytes)
@@ -302,6 +309,7 @@ def send_image(img_socket: socket.socket, gps_socket: socket.socket, data_bytes:
                 sys.exit(130)
             except SystemExit:
                 os._exit(130)
+
 
 def read_msg_length(sock: socket.socket) -> int:
     (data, _) = sock.recvfrom(4)
