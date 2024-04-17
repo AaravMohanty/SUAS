@@ -115,7 +115,7 @@ def display_polygon_3d(points):
     fig = plt.figure()
     ax: Axes3D = fig.add_subplot(111, projection="3d")
 
-    xs, ys, zs = zip(*points)  # create lists of x, y and z values
+    xs, ys, zs = zip(*(points + [points[0]]))  # create lists of x, y and z values
 
     ax.plot(xs, ys, zs)
     ax.set_zlim(0, 200)
