@@ -4,3 +4,4 @@ open-gopro
 requests
 pillow
 mavsdk
+matplotlib
