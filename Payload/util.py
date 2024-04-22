@@ -63,7 +63,7 @@ class GPSData:
         """
         Return a bytestring in the format id,longitude,latitude,altitude,compass_heading
         """
-        return bytes(f"{self.id},{self.longitude},{self.latitude},{self.altitude},{self.heading}")
+        return (f"{self.id},{self.longitude},{self.latitude},{self.altitude},{self.heading}").encode('ascii')
 
 #globals
 finished = False
@@ -74,7 +74,7 @@ ImagePort = 25251
 
 def getImage():
     #set to photo mode
-    command = "/gopro/camera/set_group?1d=1001"
+    command = "/gopro/camera/presets/set_group?id=1001"
     requests.get(url=ip+command)
 	#take photo
     command = "/gopro/camera/shutter/start"

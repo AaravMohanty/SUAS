@@ -22,9 +22,9 @@ async def run():
         gps_socket.sendall(gps_data.into_socket_msg())
         print("taking picture...")
         gopro_img = util.getImage()
-        print("sending image...")
+        print("sending image with size " + str(len(gopro_img)) + "...")
         util.send_image(img_socket, gps_socket, gopro_img)
         print("image sent. waiting 2 seconds...")
-        time.sleep(2)
+        time.sleep(3)
 asyncio.run(run())
 
