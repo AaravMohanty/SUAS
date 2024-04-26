@@ -302,7 +302,7 @@ if __name__ == "__main__":
     CoordLong = DoubleVar()
     l = Label(frame2, textvariable = CoordVar)
     l.grid(column = 0, row = 0) 
-    coord = (1, 1, 100, 0) ##(long, Lat, Alt, degree from north where 0 is true north and clockwise)
+    coord = (38.31729702009844, -76.55617670782419, 100, 0) ##(long, Lat, Alt, degree from north where 0 is true north and clockwise)
     
     #image queue
     images = dict([(f, f) for f in os.listdir("/Users/jeffrey/Documents/ImageLabeling")])
